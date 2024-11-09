@@ -53,6 +53,27 @@ func (server *Server) Start() {
 		server.Logger.Warn(fmt.Sprintf("templates directory '%s' does not exist.", server.TemplatesDirectory))
 	}
 
+	// Handle routes
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		handled := false
+		for _, route := range server.routes {
+			if r.URL.Path == route.path {
+				response := route.handler(Request{})
+
+				w.Write([]byte(response))
+
+				server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, http.StatusOK, r.UserAgent())
+				handled = true
+				break
+			}
+		}
+
+		if !handled {
+			http.NotFound(w, r)
+			server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, http.StatusNotFound, r.UserAgent())
+		}
+	})
+
 	server.Logger.Info(fmt.Sprintf("Server is listening on :%d", server.Port))
 	err := http.ListenAndServe(fmt.Sprintf(":%d", server.Port), nil)
 	if err != nil {
