@@ -101,7 +101,7 @@ func (server *Server) Start() {
 		filePath := server.StaticDirectory + r.URL.Path[len(server.StaticRoute):]
 		server.Logger.Info(filePath)
 
-		file, err := os.Open("the/path")
+		file, err := os.Open(filePath)
 		if err != nil {
 			http.NotFound(w, r)
 			server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, http.StatusNotFound, r.UserAgent())
