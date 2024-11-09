@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"runtime"
 )
 
 type Route struct {
@@ -18,7 +19,8 @@ type Server struct {
 	StaticRoute        string
 	TemplatesDirectory string
 
-	routes []Route
+	routes          []Route
+	notFoundHandler func(request Request) string
 }
 
 type Logger interface {
@@ -37,6 +39,14 @@ func NewServer() Server {
 		StaticRoute:        "/static",
 		TemplatesDirectory: "templates",
 		routes:             []Route{},
+		notFoundHandler: func(request Request) string {
+			return fmt.Sprintf(
+				"<h1>Not Found</h1>"+
+					"<p>The requested URL %s was not found on this server</p>"+
+					"<hr/>"+
+					"<i>Compass (%s) Server on port %d<i>",
+				request.URL.Path, runtime.GOOS, 3000)
+		},
 	}
 }
 
@@ -74,7 +84,14 @@ func (server *Server) Start() {
 		}
 
 		if !handled {
-			http.NotFound(w, r)
+			response := server.notFoundHandler(Request{
+				Method:    r.Method,
+				IP:        r.RemoteAddr,
+				URL:       *r.URL,
+				UserAgent: r.UserAgent(),
+			})
+
+			w.Write([]byte(response))
 			server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, http.StatusNotFound, r.UserAgent())
 		}
 	})
@@ -91,4 +108,8 @@ func (server *Server) AddRoute(path string, handler func(request Request) string
 		path:    path,
 		handler: handler,
 	})
+}
+
+func (server *Server) SetNotFoundHandler(handler func(request Request) string) {
+	server.notFoundHandler = handler
 }
