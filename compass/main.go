@@ -9,7 +9,7 @@ import (
 
 type Route struct {
 	path    string
-	handler func(request Request) string
+	handler func(request Request) Response
 }
 
 type Server struct {
@@ -20,7 +20,7 @@ type Server struct {
 	TemplatesDirectory string
 
 	routes          []Route
-	notFoundHandler func(request Request) string
+	notFoundHandler func(request Request) Response
 }
 
 type Logger interface {
@@ -39,13 +39,13 @@ func NewServer() Server {
 		StaticRoute:        "/static",
 		TemplatesDirectory: "templates",
 		routes:             []Route{},
-		notFoundHandler: func(request Request) string {
-			return fmt.Sprintf(
+		notFoundHandler: func(request Request) Response {
+			return TextWithCode(fmt.Sprintf(
 				"<h1>Not Found</h1>"+
 					"<p>The requested URL %s was not found on this server</p>"+
 					"<hr/>"+
 					"<i>Compass (%s) Server on port %d<i>",
-				request.URL.Path, runtime.GOOS, 3000)
+				request.URL.Path, runtime.GOOS, 3000), 404)
 		},
 	}
 }
@@ -68,31 +68,16 @@ func (server *Server) Start() {
 		handled := false
 		for _, route := range server.routes {
 			if r.URL.Path == route.path {
-				response := route.handler(Request{
-					Method:    r.Method,
-					IP:        r.RemoteAddr,
-					URL:       *r.URL,
-					UserAgent: r.UserAgent(),
-				})
-
-				w.Write([]byte(response))
-
-				server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, http.StatusOK, r.UserAgent())
+				request := NewRequest(*r)
+				handleRequest(w, *r, request, *server, route.handler(request))
 				handled = true
 				break
 			}
 		}
 
 		if !handled {
-			response := server.notFoundHandler(Request{
-				Method:    r.Method,
-				IP:        r.RemoteAddr,
-				URL:       *r.URL,
-				UserAgent: r.UserAgent(),
-			})
-
-			w.Write([]byte(response))
-			server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, http.StatusNotFound, r.UserAgent())
+			request := NewRequest(*r)
+			handleRequest(w, *r, request, *server, server.notFoundHandler(request))
 		}
 	})
 
@@ -103,16 +88,16 @@ func (server *Server) Start() {
 
 		file, err := os.Open(filePath)
 		if err != nil {
-			http.NotFound(w, r)
-			server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, http.StatusNotFound, r.UserAgent())
+			request := NewRequest(*r)
+			handleRequest(w, *r, request, *server, server.notFoundHandler(request))
 			return
 		}
 		defer file.Close()
 
 		fileStat, err := file.Stat()
 		if err != nil {
-			http.NotFound(w, r)
-			server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, http.StatusNotFound, r.UserAgent())
+			request := NewRequest(*r)
+			handleRequest(w, *r, request, *server, server.notFoundHandler(request))
 			return
 		}
 
@@ -127,13 +112,13 @@ func (server *Server) Start() {
 	}
 }
 
-func (server *Server) AddRoute(path string, handler func(request Request) string) {
+func (server *Server) AddRoute(path string, handler func(request Request) Response) {
 	server.routes = append(server.routes, Route{
 		path:    path,
 		handler: handler,
 	})
 }
 
-func (server *Server) SetNotFoundHandler(handler func(request Request) string) {
+func (server *Server) SetNotFoundHandler(handler func(request Request) Response) {
 	server.notFoundHandler = handler
 }
