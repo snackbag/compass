@@ -36,10 +36,3 @@ func (server *Server) Start() {
 		panic(err)
 	}
 }
-
-func getRoot(writer http.ResponseWriter, request *http.Request) {
-	_, err := io.WriteString(writer, "Test")
-	if err != nil {
-		panic(err)
-	}
-}
