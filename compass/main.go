@@ -12,6 +12,8 @@ type Server struct {
 	StaticDirectory    string
 	StaticRoute        string
 	TemplatesDirectory string
+
+	routes []string
 }
 
 type Logger interface {
@@ -23,7 +25,14 @@ type Logger interface {
 }
 
 func NewServer() Server {
-	return Server{Port: 3000, Logger: NewLogger(), StaticDirectory: "static", StaticRoute: "/static", TemplatesDirectory: "templates"}
+	return Server{
+		Port:               3000,
+		Logger:             NewLogger(),
+		StaticDirectory:    "static",
+		StaticRoute:        "/static",
+		TemplatesDirectory: "templates",
+		routes:             []string{},
+	}
 }
 
 func NewLogger() Logger {
