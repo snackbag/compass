@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	server := compass.Server{Port: 3000}
+	server := compass.NewServer()
 	server.Start()
 }
