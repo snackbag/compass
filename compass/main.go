@@ -6,6 +6,11 @@ import (
 	"os"
 )
 
+type Route struct {
+	path    string
+	handler func(request Request) string
+}
+
 type Server struct {
 	Port               int
 	Logger             Logger
@@ -13,7 +18,7 @@ type Server struct {
 	StaticRoute        string
 	TemplatesDirectory string
 
-	routes []string
+	routes []Route
 }
 
 type Logger interface {
@@ -31,7 +36,7 @@ func NewServer() Server {
 		StaticDirectory:    "static",
 		StaticRoute:        "/static",
 		TemplatesDirectory: "templates",
-		routes:             []string{},
+		routes:             []Route{},
 	}
 }
 
@@ -53,4 +58,11 @@ func (server *Server) Start() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (server *Server) AddRoute(path string, handler func(request Request) string) {
+	server.routes = append(server.routes, Route{
+		path:    path,
+		handler: handler,
+	})
 }
