@@ -58,7 +58,12 @@ func (server *Server) Start() {
 		handled := false
 		for _, route := range server.routes {
 			if r.URL.Path == route.path {
-				response := route.handler(Request{})
+				response := route.handler(Request{
+					Method:    r.Method,
+					IP:        r.RemoteAddr,
+					URL:       *r.URL,
+					UserAgent: r.UserAgent(),
+				})
 
 				w.Write([]byte(response))
 
