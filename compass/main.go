@@ -2,13 +2,15 @@ package compass
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 )
 
 type Server struct {
-	Port   int
-	Logger Logger
+	Port               int
+	Logger             Logger
+	StaticDirectory    string
+	StaticRoute        string
+	TemplatesDirectory string
 }
 
 type Logger interface {
@@ -20,7 +22,7 @@ type Logger interface {
 }
 
 func NewServer() Server {
-	return Server{Port: 3000, Logger: NewLogger()}
+	return Server{Port: 3000, Logger: NewLogger(), StaticDirectory: "static", StaticRoute: "/static", TemplatesDirectory: "templates"}
 }
 
 func NewLogger() Logger {
@@ -28,8 +30,6 @@ func NewLogger() Logger {
 }
 
 func (server *Server) Start() {
-	http.HandleFunc("/", getRoot)
-
 	server.Logger.Info(fmt.Sprintf("Server is listening on :%d", server.Port))
 	err := http.ListenAndServe(fmt.Sprintf(":%d", server.Port), nil)
 	if err != nil {
