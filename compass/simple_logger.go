@@ -25,5 +25,18 @@ func (l *SimpleLogger) Error(message string) {
 }
 
 func (l *SimpleLogger) Request(method string, ip string, route string, code int, useragent string) {
-	log(fmt.Sprintf("\x1b[0;34m%s %d\033[0m - \033[0;35m%s %s\033[0m \033[0;37m\"%s\"", ip, code, method, route, useragent))
+	var colorCode string
+	switch {
+	case code >= 200 && code < 300:
+		colorCode = "\033[1;32m"
+	case code >= 300 && code < 400:
+		colorCode = "\033[1;33m"
+	case code >= 400 && code < 600:
+		colorCode = "\033[1;31m"
+	default:
+		colorCode = "\033[1;37m"
+	}
+
+	log(fmt.Sprintf("\x1b[0;34m%s %s%d\033[0m - \033[0;35m%s %s\033[0m \033[0;37m\"%s\"",
+		ip, colorCode, code, method, route, useragent))
 }
