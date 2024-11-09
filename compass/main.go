@@ -84,7 +84,6 @@ func (server *Server) Start() {
 	// Handle static
 	http.HandleFunc(server.StaticRoute+"/", func(w http.ResponseWriter, r *http.Request) {
 		filePath := server.StaticDirectory + r.URL.Path[len(server.StaticRoute):]
-		server.Logger.Info(filePath)
 
 		file, err := os.Open(filePath)
 		if err != nil {
