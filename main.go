@@ -12,5 +12,9 @@ func main() {
 		return fmt.Sprintf("Hey, your IP is %s and you sent a %s request", request.IP, request.Method)
 	})
 
+	server.SetNotFoundHandler(func(request compass.Request) string {
+		return "woah, that's not found"
+	})
+
 	server.Start()
 }
