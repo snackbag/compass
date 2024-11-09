@@ -3,6 +3,7 @@ package compass
 import (
 	"fmt"
 	"net/http"
+	"os"
 )
 
 type Server struct {
@@ -30,6 +31,14 @@ func NewLogger() Logger {
 }
 
 func (server *Server) Start() {
+	if _, err := os.Stat(server.StaticDirectory); os.IsNotExist(err) {
+		server.Logger.Warn(fmt.Sprintf("static directory '%s' does not exist.", server.StaticDirectory))
+	}
+
+	if _, err := os.Stat(server.TemplatesDirectory); os.IsNotExist(err) {
+		server.Logger.Warn(fmt.Sprintf("templates directory '%s' does not exist.", server.TemplatesDirectory))
+	}
+
 	server.Logger.Info(fmt.Sprintf("Server is listening on :%d", server.Port))
 	err := http.ListenAndServe(fmt.Sprintf(":%d", server.Port), nil)
 	if err != nil {
