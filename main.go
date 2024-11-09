@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"compass/compass"
+)
 
 func main() {
-	fmt.Println("Hello world!")
+	server := compass.Server{Port: 3000}
+	server.Start()
 }
