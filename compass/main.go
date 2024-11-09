@@ -96,6 +96,30 @@ func (server *Server) Start() {
 		}
 	})
 
+	// Handle static
+	http.HandleFunc(server.StaticRoute+"/", func(w http.ResponseWriter, r *http.Request) {
+		filePath := server.StaticDirectory + r.URL.Path[len(server.StaticRoute):]
+		server.Logger.Info(filePath)
+
+		file, err := os.Open("the/path")
+		if err != nil {
+			http.NotFound(w, r)
+			server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, http.StatusNotFound, r.UserAgent())
+			return
+		}
+		defer file.Close()
+
+		fileStat, err := file.Stat()
+		if err != nil {
+			http.NotFound(w, r)
+			server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, http.StatusNotFound, r.UserAgent())
+			return
+		}
+
+		http.ServeContent(w, r, filePath, fileStat.ModTime(), file)
+		server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, http.StatusOK, r.UserAgent())
+	})
+
 	server.Logger.Info(fmt.Sprintf("Server is listening on :%d", server.Port))
 	err := http.ListenAndServe(fmt.Sprintf(":%d", server.Port), nil)
 	if err != nil {
