@@ -7,6 +7,14 @@ import (
 	"runtime"
 )
 
+type Any struct {
+	Value interface{}
+}
+
+func (any *Any) ToString() string {
+	return fmt.Sprintf("%v", any.Value)
+}
+
 type Route struct {
 	path    string
 	handler func(request Request) Response
