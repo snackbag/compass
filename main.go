@@ -20,5 +20,9 @@ func main() {
 		return compass.TextWithCode("woah, that's not found", 404)
 	})
 
+	server.AddRoute("/test2", func(request compass.Request) compass.Response {
+		return compass.Fill("example.html", server)
+	})
+
 	server.Start()
 }
