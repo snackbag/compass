@@ -1,2 +1,2 @@
-module compass
-go 1.18
+module github.com/snackbag/compass
+go 1.23.3
