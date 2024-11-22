@@ -1,6 +1,7 @@
 package compass
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -8,10 +9,9 @@ import (
 
 type FillParser struct {
 	Contents string
-
-	context TemplateContext
-	col     int
-	line    int
+	context  TemplateContext
+	col      int
+	line     int
 }
 
 type TemplateContext struct {
@@ -35,13 +35,22 @@ func (ctx *TemplateContext) GetVariable(key string) string {
 
 func (parser *FillParser) Convert() string {
 	converted := ""
+	stack := make([]string, 0) // Track nested if conditions
 
 	// none = 0, var = 1, action = 2
 	inPart := 0
 	lastChars := ""
+	skipContent := false
 
 	for _, currentRune := range parser.Contents {
 		char := string(currentRune)
+
+		if char == "\n" {
+			parser.line++
+			parser.col = 0
+		} else {
+			parser.col++
+		}
 
 		if inPart == 0 && lastChars == "" && char == "<" {
 			lastChars += char
@@ -50,33 +59,95 @@ func (parser *FillParser) Convert() string {
 
 		if inPart == 0 && char == "$" {
 			if lastChars != "<" {
-				converted += char
+				if !skipContent {
+					converted += char
+				}
 				continue
 			}
-
 			inPart = 1
 			lastChars = ""
 			continue
+		} else if inPart == 0 && char == "%" {
+			if lastChars != "<" {
+				if !skipContent {
+					converted += char
+				}
+				continue
+			}
+			inPart = 2
+			lastChars = ""
+			continue
 		} else if inPart == 0 && lastChars == "<" {
-			converted += lastChars + char
+			if !skipContent {
+				converted += lastChars + char
+			}
 			lastChars = ""
 			continue
 		}
 
 		if inPart == 1 && strings.HasSuffix(lastChars, "/>") {
 			lastChars = strings.TrimSuffix(lastChars, "/>")
-			converted += parser.context.GetVariable(lastChars)
-			converted += char
+			if !skipContent {
+				converted += parser.context.GetVariable(lastChars)
+			}
+			if !skipContent {
+				converted += char
+			}
 			inPart = 0
+			lastChars = ""
 			continue
 		}
 
-		if inPart == 1 {
+		if inPart == 2 && strings.HasSuffix(lastChars, "/>") {
+			lastChars = strings.TrimSuffix(lastChars, "/>")
+
+			args := strings.SplitN(lastChars, " ", 2)
+			cmd := args[0]
+			arg := ""
+			if len(args) > 1 {
+				arg = args[1]
+			}
+
+			switch cmd {
+			case "if":
+				stack = append(stack, "if")
+				skipContent = !parser.context.EvaluateVariable(arg)
+			case "end":
+				if len(stack) == 0 {
+					return fmt.Sprintf("Unexpected end at line %d, col %d", parser.line, parser.col)
+				}
+				if stack[len(stack)-1] != "if" {
+					return fmt.Sprintf("Mismatched end at line %d, col %d", parser.line, parser.col)
+				}
+				stack = stack[:len(stack)-1]
+				skipContent = len(stack) > 0 && !parser.context.EvaluateVariable(stack[len(stack)-1])
+			case "else":
+				if len(stack) == 0 || stack[len(stack)-1] != "if" {
+					return fmt.Sprintf("Unexpected else at line %d, col %d", parser.line, parser.col)
+				}
+				skipContent = !skipContent
+			default:
+				return fmt.Sprintf("Unknown command '%s' at line %d, col %d", cmd, parser.line, parser.col)
+			}
+
+			inPart = 0
+			lastChars = ""
+			continue
+		}
+
+		if inPart == 1 || inPart == 2 {
 			lastChars += char
 			continue
 		}
 
-		converted += char
+		if !skipContent {
+			converted += char
+		}
+	}
+
+	// Check for unclosed control structures
+	if len(stack) > 0 {
+		return fmt.Sprintf("Unclosed control structure '%s'", stack[len(stack)-1])
 	}
 
 	return converted
