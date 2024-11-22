@@ -22,7 +22,7 @@ func main() {
 
 	server.AddRoute("/test2", func(request compass.Request) compass.Response {
 		ctx := compass.NewTemplateContext(request)
-		ctx.SetVariable("test", "I'm a test")
+		ctx.SetVariable("test", false)
 
 		return compass.Fill("example.html", ctx, server)
 	})
