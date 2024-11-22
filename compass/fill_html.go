@@ -82,6 +82,26 @@ func (parser *FillParser) Convert() string {
 	return converted
 }
 
+func (ctx *TemplateContext) EvaluateVariable(key string) bool {
+	val, exists := ctx.variables[key]
+	if !exists {
+		return false
+	}
+
+	switch v := val.Value.(type) {
+	case bool:
+		return v
+	case string:
+		return v != ""
+	case int:
+		return v != 0
+	case float64:
+		return v != 0.0
+	default:
+		return false
+	}
+}
+
 func Fill(template string, ctx TemplateContext, server Server) Response {
 	byteBody, err := os.ReadFile(filepath.Join(server.TemplatesDirectory, template))
 	if err != nil {
