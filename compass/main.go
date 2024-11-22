@@ -16,8 +16,9 @@ func (any *Any) ToString() string {
 }
 
 type Route struct {
-	path    string
-	handler func(request Request) Response
+	path           string
+	allowedMethods []string
+	handler        func(request Request) Response
 }
 
 type Server struct {
@@ -119,11 +120,34 @@ func (server *Server) Start() {
 	}
 }
 
-func (server *Server) AddRoute(path string, handler func(request Request) Response) {
-	server.routes = append(server.routes, Route{
-		path:    path,
-		handler: handler,
-	})
+func (server *Server) AddRoute(path string, handler func(request Request) Response) Route {
+	route := Route{
+		path:           path,
+		handler:        handler,
+		allowedMethods: []string{"GET"},
+	}
+	server.routes = append(server.routes, route)
+
+	return route
+}
+
+func (server *Server) SetAllowedMethod(route Route, method string, allowed bool) {
+	if allowed {
+		for _, m := range route.allowedMethods {
+			if m == method {
+				return
+			}
+		}
+		route.allowedMethods = append(route.allowedMethods, method)
+	} else {
+		newMethods := make([]string, 0, len(route.allowedMethods))
+		for _, m := range route.allowedMethods {
+			if m != method {
+				newMethods = append(newMethods, m)
+			}
+		}
+		route.allowedMethods = newMethods
+	}
 }
 
 func (server *Server) SetNotFoundHandler(handler func(request Request) Response) {
