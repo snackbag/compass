@@ -16,9 +16,9 @@ func (any *Any) ToString() string {
 }
 
 type Route struct {
-	path           string
-	allowedMethods []string
-	handler        func(request Request) Response
+	Path           string
+	AllowedMethods []string
+	Handler        func(request Request) Response
 }
 
 type Server struct {
@@ -76,9 +76,9 @@ func (server *Server) Start() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		handled := false
 		for _, route := range server.routes {
-			if r.URL.Path == route.path {
+			if r.URL.Path == route.Path {
 				request := NewRequest(*r)
-				handleRequest(w, *r, request, *server, route.handler(request), &route)
+				handleRequest(w, *r, request, *server, route.Handler(request), &route)
 				handled = true
 				break
 			}
@@ -122,9 +122,9 @@ func (server *Server) Start() {
 
 func (server *Server) AddRoute(path string, handler func(request Request) Response) Route {
 	route := Route{
-		path:           path,
-		handler:        handler,
-		allowedMethods: []string{"GET"},
+		Path:           path,
+		Handler:        handler,
+		AllowedMethods: []string{"GET"},
 	}
 	server.routes = append(server.routes, route)
 
@@ -133,20 +133,20 @@ func (server *Server) AddRoute(path string, handler func(request Request) Respon
 
 func (server *Server) SetAllowedMethod(route Route, method string, allowed bool) {
 	if allowed {
-		for _, m := range route.allowedMethods {
+		for _, m := range route.AllowedMethods {
 			if m == method {
 				return
 			}
 		}
-		route.allowedMethods = append(route.allowedMethods, method)
+		route.AllowedMethods = append(route.AllowedMethods, method)
 	} else {
-		newMethods := make([]string, 0, len(route.allowedMethods))
-		for _, m := range route.allowedMethods {
+		newMethods := make([]string, 0, len(route.AllowedMethods))
+		for _, m := range route.AllowedMethods {
 			if m != method {
 				newMethods = append(newMethods, m)
 			}
 		}
-		route.allowedMethods = newMethods
+		route.AllowedMethods = newMethods
 	}
 }
 

@@ -46,7 +46,7 @@ func TextWithCode(content string, code int) Response {
 
 func handleRequest(w http.ResponseWriter, r http.Request, request Request, server Server, response Response, route *Route) {
 	if route != nil {
-		if !slices.Contains(route.allowedMethods, request.Method) {
+		if !slices.Contains(route.AllowedMethods, request.Method) {
 			w.Write([]byte("405 - Method not allowed"))
 			w.WriteHeader(405)
 			server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, 405, r.UserAgent())
