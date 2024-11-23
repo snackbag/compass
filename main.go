@@ -1,8 +1,8 @@
 package main
 
 import (
-	"compass/compass"
 	"fmt"
+	"github.com/snackbag/compass/compass"
 )
 
 func main() {
