@@ -76,10 +76,11 @@ func (server *Server) Start() {
 	// Handle routes
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		handled := false
-		for _, route := range server.routes {
+		for i := range server.routes {
+			route := &server.routes[i]
 			if r.URL.Path == route.Path {
 				request := NewRequest(*r)
-				handleRequest(w, *r, request, *server, route.Handler(request), &route)
+				handleRequest(w, *r, request, *server, route.Handler(request), route)
 				handled = true
 				break
 			}
@@ -121,7 +122,7 @@ func (server *Server) Start() {
 	}
 }
 
-func (server *Server) AddRoute(path string, handler func(request Request) Response) Route {
+func (server *Server) AddRoute(path string, handler func(request Request) Response) *Route {
 	route := Route{
 		Path:           path,
 		Handler:        handler,
@@ -129,7 +130,7 @@ func (server *Server) AddRoute(path string, handler func(request Request) Respon
 	}
 	server.routes = append(server.routes, route)
 
-	return route
+	return &server.routes[len(server.routes)-1]
 }
 
 func (server *Server) SetAllowedMethod(route *Route, method string, allowed bool) {

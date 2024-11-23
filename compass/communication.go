@@ -47,8 +47,8 @@ func TextWithCode(content string, code int) Response {
 func handleRequest(w http.ResponseWriter, r http.Request, request Request, server Server, response Response, route *Route) {
 	if route != nil {
 		if !slices.Contains(route.AllowedMethods, request.Method) {
-			w.Write([]byte("405 - Method not allowed"))
 			w.WriteHeader(405)
+			w.Write([]byte("405 - Method not allowed"))
 			server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, 405, r.UserAgent())
 			return
 		}
@@ -57,9 +57,9 @@ func handleRequest(w http.ResponseWriter, r http.Request, request Request, serve
 	if response.IsRedirect {
 		http.Redirect(w, &r, response.Content, response.Code)
 	} else {
+		w.WriteHeader(response.Code)
 		w.Write([]byte(response.Content))
 	}
 
-	w.WriteHeader(response.Code)
 	server.Logger.Request(r.Method, r.RemoteAddr, r.URL.Path, response.Code, r.UserAgent())
 }
