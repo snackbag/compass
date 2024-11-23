@@ -7,18 +7,20 @@ import (
 )
 
 type Request struct {
-	Method    string
-	IP        string
-	URL       url.URL
-	UserAgent string
+	Method      string
+	IP          string
+	URL         url.URL
+	UserAgent   string
+	FullRequest http.Request
 }
 
 func NewRequest(r http.Request) Request {
 	return Request{
-		Method:    r.Method,
-		IP:        r.RemoteAddr,
-		URL:       *r.URL,
-		UserAgent: r.UserAgent(),
+		Method:      r.Method,
+		IP:          r.RemoteAddr,
+		URL:         *r.URL,
+		UserAgent:   r.UserAgent(),
+		FullRequest: r,
 	}
 }
 
