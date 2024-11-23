@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"slices"
 )
 
 type Any struct {
@@ -133,20 +134,14 @@ func (server *Server) AddRoute(path string, handler func(request Request) Respon
 
 func (server *Server) SetAllowedMethod(route Route, method string, allowed bool) {
 	if allowed {
-		for _, m := range route.AllowedMethods {
-			if m == method {
-				return
-			}
+		if slices.Contains(route.AllowedMethods, method) {
+			return
 		}
 		route.AllowedMethods = append(route.AllowedMethods, method)
 	} else {
-		newMethods := make([]string, 0, len(route.AllowedMethods))
-		for _, m := range route.AllowedMethods {
-			if m != method {
-				newMethods = append(newMethods, m)
-			}
-		}
-		route.AllowedMethods = newMethods
+		route.AllowedMethods = slices.DeleteFunc(route.AllowedMethods, func(m string) bool {
+			return m == method
+		})
 	}
 }
 
