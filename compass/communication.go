@@ -15,6 +15,11 @@ type Request struct {
 }
 
 func NewRequest(r http.Request) Request {
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+
 	return Request{
 		Method:      r.Method,
 		IP:          r.RemoteAddr,
