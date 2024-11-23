@@ -132,7 +132,7 @@ func (server *Server) AddRoute(path string, handler func(request Request) Respon
 	return route
 }
 
-func (server *Server) SetAllowedMethod(route Route, method string, allowed bool) {
+func (server *Server) SetAllowedMethod(route *Route, method string, allowed bool) {
 	if allowed {
 		if slices.Contains(route.AllowedMethods, method) {
 			return
