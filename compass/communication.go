@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"time"
 )
 
 type Request struct {
@@ -12,6 +13,7 @@ type Request struct {
 	URL         url.URL
 	UserAgent   string
 	FullRequest http.Request
+	Cookies     []*http.Cookie
 }
 
 func NewRequest(r http.Request) Request {
@@ -26,6 +28,7 @@ func NewRequest(r http.Request) Request {
 		URL:         *r.URL,
 		UserAgent:   r.UserAgent(),
 		FullRequest: r,
+		Cookies:     r.Cookies(),
 	}
 }
 
@@ -34,11 +37,21 @@ type Response struct {
 	Code       int
 	Content    string
 
-	cookies []http.Cookie
+	cookies        map[string]http.Cookie
+	removedCookies []string
+}
+
+func (resp *Response) SetCookie(cookie http.Cookie) {
+	resp.cookies[cookie.Name] = cookie
+}
+
+func (resp *Response) RemoveCookie(cookie http.Cookie) {
+	delete(resp.cookies, cookie.Name)
+	resp.removedCookies = append(resp.removedCookies)
 }
 
 func NewResponse(isRedirect bool, code int, content string) Response {
-	return Response{IsRedirect: isRedirect, Code: code, Content: content, cookies: make([]http.Cookie, 0)}
+	return Response{IsRedirect: isRedirect, Code: code, Content: content, cookies: make(map[string]http.Cookie)}
 }
 
 func Redirect(target string) Response {
@@ -58,6 +71,14 @@ func TextWithCode(content string, code int) Response {
 }
 
 func handleRequest(w http.ResponseWriter, r http.Request, request Request, server Server, response Response, route *Route) {
+	for _, cookie := range response.removedCookies {
+		http.SetCookie(w, &http.Cookie{Name: cookie, Value: "", Path: "/", Expires: time.Unix(0, 0), HttpOnly: true})
+	}
+
+	for _, cookie := range response.cookies {
+		http.SetCookie(w, &cookie)
+	}
+
 	if route != nil {
 		if !slices.Contains(route.AllowedMethods, request.Method) {
 			w.WriteHeader(405)
