@@ -33,22 +33,28 @@ type Response struct {
 	IsRedirect bool
 	Code       int
 	Content    string
+
+	cookies []http.Cookie
+}
+
+func NewResponse(isRedirect bool, code int, content string) Response {
+	return Response{IsRedirect: isRedirect, Code: code, Content: content, cookies: make([]http.Cookie, 0)}
 }
 
 func Redirect(target string) Response {
-	return Response{IsRedirect: true, Code: 307, Content: target}
+	return NewResponse(true, 307, target)
 }
 
 func RedirectWithCode(target string, code int) Response {
-	return Response{IsRedirect: true, Code: code, Content: target}
+	return NewResponse(true, code, target)
 }
 
 func Text(content string) Response {
-	return Response{IsRedirect: false, Code: 200, Content: content}
+	return NewResponse(false, 200, content)
 }
 
 func TextWithCode(content string, code int) Response {
-	return Response{IsRedirect: false, Code: code, Content: content}
+	return NewResponse(false, code, content)
 }
 
 func handleRequest(w http.ResponseWriter, r http.Request, request Request, server Server, response Response, route *Route) {
