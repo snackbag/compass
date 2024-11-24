@@ -1,6 +1,7 @@
 package compass
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"slices"
@@ -14,6 +15,8 @@ type Request struct {
 	UserAgent   string
 	FullRequest http.Request
 	Cookies     []*http.Cookie
+
+	r http.Request
 }
 
 func NewRequest(r http.Request) Request {
@@ -29,7 +32,22 @@ func NewRequest(r http.Request) Request {
 		UserAgent:   r.UserAgent(),
 		FullRequest: r,
 		Cookies:     r.Cookies(),
+
+		r: r,
 	}
+}
+
+func (request *Request) GetCookie(name string) *http.Cookie {
+	cookie, err := request.r.Cookie(name)
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			return nil
+		}
+
+		panic(err)
+	}
+
+	return cookie
 }
 
 type Response struct {
