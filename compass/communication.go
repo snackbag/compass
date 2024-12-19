@@ -15,6 +15,7 @@ type Request struct {
 	UserAgent   string
 	FullRequest http.Request
 	Cookies     []*http.Cookie
+	Server      *Server
 
 	routeParams map[string]string
 	r           http.Request
@@ -24,7 +25,7 @@ func (request *Request) GetParam(name string) string {
 	return request.routeParams[name]
 }
 
-func NewRequest(r http.Request) Request {
+func NewRequest(r http.Request, server *Server) Request {
 	err := r.ParseForm()
 	if err != nil {
 		panic(err)
@@ -39,6 +40,7 @@ func NewRequest(r http.Request) Request {
 		Cookies:     r.Cookies(),
 		routeParams: make(map[string]string),
 		r:           r,
+		Server:      server,
 	}
 }
 
@@ -53,6 +55,25 @@ func (request *Request) GetCookie(name string) *http.Cookie {
 	}
 
 	return cookie
+}
+
+func (request *Request) GetSession() *Session {
+	possibleCookie := request.GetCookie("_compassId")
+	var session *Session
+
+	if possibleCookie == nil {
+		session = NewSession(request.Server)
+	} else {
+		recv := GetSessionById(request.Server, possibleCookie.Value)
+		if recv == nil {
+			return nil
+		}
+
+		session = recv
+	}
+
+	session.ResetTransaction()
+	return session
 }
 
 type Response struct {
