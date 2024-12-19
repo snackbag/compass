@@ -94,6 +94,10 @@ func (resp *Response) RemoveCookie(cookie http.Cookie) {
 	resp.removedCookies = append(resp.removedCookies)
 }
 
+func (resp *Response) SetSession(session *Session) {
+	resp.SetCookie(http.Cookie{Name: "_compassId", Value: session.Encrypt(), MaxAge: 0})
+}
+
 func NewResponse(isRedirect bool, code int, content string) Response {
 	return Response{IsRedirect: isRedirect, Code: code, Content: content, cookies: make(map[string]http.Cookie)}
 }
