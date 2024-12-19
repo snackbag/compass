@@ -27,5 +27,13 @@ func main() {
 		return compass.Fill("example.html", ctx, server)
 	})
 
+	server.AddRoute("/route-test/<part1>/@<part2>/<part3>wow", func(request compass.Request) compass.Response {
+		part1 := request.GetParam("part1")
+		part2 := request.GetParam("part2")
+		part3 := request.GetParam("part3")
+
+		return compass.Text(fmt.Sprintf("P1 %s (@%s) P3: %s", part1, part2, part3))
+	})
+
 	server.Start()
 }
