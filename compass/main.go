@@ -208,7 +208,7 @@ func (server *Server) Start() {
 		for i := range server.routes {
 			route := &server.routes[i]
 			if matches, params := matchRoute(route.Pattern, r.URL.Path); matches {
-				request := NewRequest(*r)
+				request := NewRequest(*r, server)
 				request.routeParams = params
 				handleRequest(w, *r, request, *server, route.Handler(request), route)
 				handled = true
@@ -217,7 +217,7 @@ func (server *Server) Start() {
 		}
 
 		if !handled {
-			request := NewRequest(*r)
+			request := NewRequest(*r, server)
 			handleRequest(w, *r, request, *server, server.notFoundHandler(request), nil)
 		}
 	})
@@ -228,7 +228,7 @@ func (server *Server) Start() {
 
 		file, err := os.Open(filePath)
 		if err != nil {
-			request := NewRequest(*r)
+			request := NewRequest(*r, server)
 			handleRequest(w, *r, request, *server, server.notFoundHandler(request), nil)
 			return
 		}
@@ -236,7 +236,7 @@ func (server *Server) Start() {
 
 		fileStat, err := file.Stat()
 		if err != nil {
-			request := NewRequest(*r)
+			request := NewRequest(*r, server)
 			handleRequest(w, *r, request, *server, server.notFoundHandler(request), nil)
 			return
 		}
