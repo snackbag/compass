@@ -154,6 +154,10 @@ func (session *Session) Encrypt() string {
 	return base64.StdEncoding.EncodeToString(cipherText)
 }
 
+func (session *Session) ResetTransaction() {
+	session.transaction = make(map[string]interface{})
+}
+
 func DecryptSessionID(server *Server, id string) string {
 	hashedKey := sha256.Sum256([]byte(*server.sessionSecret))
 	block, err := aes.NewCipher(hashedKey[:])
