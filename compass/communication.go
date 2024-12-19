@@ -62,7 +62,7 @@ func (request *Request) GetSession() *Session {
 	var session *Session
 
 	if possibleCookie == nil {
-		session = NewSession(request.Server)
+		return nil
 	} else {
 		recv := GetSessionById(request.Server, possibleCookie.Value)
 		if recv == nil {
