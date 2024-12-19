@@ -20,7 +20,6 @@ func main() {
 		session.Commit()
 
 		resp := compass.Text(fmt.Sprintf("Hey, your IP is %s and you sent a %s request", request.IP, request.Method))
-		resp.SetSession(session)
 		return resp
 	})
 
