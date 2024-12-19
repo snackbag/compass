@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"slices"
 	"strings"
@@ -131,6 +132,7 @@ type Server struct {
 	StaticDirectory    string
 	StaticRoute        string
 	TemplatesDirectory string
+	SessionDirectory   string
 
 	routes          []Route
 	notFoundHandler func(request Request) Response
@@ -151,6 +153,7 @@ func NewServer() Server {
 		StaticDirectory:    "static",
 		StaticRoute:        "/static",
 		TemplatesDirectory: "templates",
+		SessionDirectory:   fmt.Sprintf(".compass%csessions", filepath.Separator),
 		routes:             []Route{},
 		notFoundHandler: func(request Request) Response {
 			return TextWithCode(fmt.Sprintf(
@@ -174,6 +177,15 @@ func (server *Server) Start() {
 
 	if _, err := os.Stat(server.TemplatesDirectory); os.IsNotExist(err) {
 		server.Logger.Warn(fmt.Sprintf("templates directory '%s' does not exist.", server.TemplatesDirectory))
+	}
+
+	if _, err := os.Stat(server.SessionDirectory); os.IsNotExist(err) {
+		err := os.MkdirAll(server.SessionDirectory, 0755)
+		if err != nil {
+			panic(err)
+		}
+
+		server.Logger.Info(fmt.Sprintf("Created session directory at %s", server.SessionDirectory))
 	}
 
 	// Handle routes
