@@ -2,6 +2,7 @@ package compass
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -91,7 +92,7 @@ func (resp *Response) SetCookie(cookie http.Cookie) {
 
 func (resp *Response) RemoveCookie(cookie http.Cookie) {
 	delete(resp.cookies, cookie.Name)
-	resp.removedCookies = append(resp.removedCookies)
+	resp.removedCookies = append(resp.removedCookies, cookie.Name)
 }
 
 func (resp *Response) SetSession(session *Session) {
@@ -120,7 +121,15 @@ func TextWithCode(content string, code int) Response {
 
 func handleRequest(w http.ResponseWriter, r http.Request, request Request, server Server, response Response, route *Route) {
 	for _, cookie := range response.removedCookies {
-		http.SetCookie(w, &http.Cookie{Name: cookie, Value: "", Path: "/", Expires: time.Unix(0, 0), HttpOnly: true})
+		http.SetCookie(w, &http.Cookie{
+			Name:    cookie,
+			Value:   "",
+			Path:    "/",
+			Expires: time.Unix(0, 0),
+			MaxAge:  -1,
+		})
+
+		fmt.Println("rm cookie")
 	}
 
 	for _, cookie := range response.cookies {
