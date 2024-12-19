@@ -173,7 +173,7 @@ func NewLogger() Logger {
 }
 
 func (server *Server) SetSessionSecret(secret string) {
-	if server.sessionSecret == nil {
+	if server.sessionSecret != nil {
 		panic("Cannot set session secret on a server that already has a set secret")
 	}
 
