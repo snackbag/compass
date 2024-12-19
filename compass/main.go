@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"slices"
+	"strings"
 )
 
 type Any struct {
@@ -17,9 +18,111 @@ func (any *Any) ToString() string {
 }
 
 type Route struct {
-	Path           string
+	Pattern        RoutePattern
 	AllowedMethods []string
 	Handler        func(request Request) Response
+}
+
+type RoutePattern struct {
+	raw          string
+	segments     []string
+	paramIndices map[int]string // maps segment index to parameter name
+	prefixParams map[int]string // maps segment index to prefix-based parameter name
+	suffixParams map[int]struct {
+		name   string
+		suffix string
+	}
+}
+
+func parseRoutePattern(pattern string) RoutePattern {
+	segments := strings.Split(strings.Trim(pattern, "/"), "/")
+	paramIndices := make(map[int]string)
+	prefixParams := make(map[int]string)
+	suffixParams := make(map[int]struct {
+		name   string
+		suffix string
+	})
+
+	for i, segment := range segments {
+		if strings.HasPrefix(segment, "<") && strings.HasSuffix(segment, ">") {
+			// Standard parameter like <name>
+			paramName := segment[1 : len(segment)-1]
+			paramIndices[i] = paramName
+		} else if strings.Contains(segment, "<") && strings.Contains(segment, ">") {
+			// Parameter with prefix/suffix
+			start := strings.Index(segment, "<")
+			end := strings.Index(segment, ">")
+
+			if start == 0 {
+				// Has suffix only
+				paramName := segment[1:end]
+				suffix := segment[end+1:]
+				suffixParams[i] = struct {
+					name   string
+					suffix string
+				}{paramName, suffix}
+			} else if end == len(segment)-1 {
+				// Has prefix only
+				prefix := segment[:start]
+				paramName := segment[start+1 : end]
+				if strings.HasPrefix(prefix, "@") {
+					prefixParams[i] = paramName
+				}
+			}
+		}
+	}
+
+	return RoutePattern{
+		raw:          pattern,
+		segments:     segments,
+		paramIndices: paramIndices,
+		prefixParams: prefixParams,
+		suffixParams: suffixParams,
+	}
+}
+
+func matchRoute(pattern RoutePattern, path string) (bool, map[string]string) {
+	pathSegments := strings.Split(strings.Trim(path, "/"), "/")
+	if len(pathSegments) != len(pattern.segments) {
+		return false, nil
+	}
+
+	params := make(map[string]string)
+
+	for i, segment := range pattern.segments {
+		pathSegment := pathSegments[i]
+
+		// Check standard parameters
+		if paramName, ok := pattern.paramIndices[i]; ok {
+			params[paramName] = pathSegment
+			continue
+		}
+
+		// Check prefix parameters
+		if paramName, ok := pattern.prefixParams[i]; ok {
+			if !strings.HasPrefix(pathSegment, "@") {
+				return false, nil
+			}
+			params[paramName] = pathSegment[1:]
+			continue
+		}
+
+		// Check suffix parameters
+		if param, ok := pattern.suffixParams[i]; ok {
+			if !strings.HasSuffix(pathSegment, param.suffix) {
+				return false, nil
+			}
+			params[param.name] = strings.TrimSuffix(pathSegment, param.suffix)
+			continue
+		}
+
+		// Check static segments
+		if segment != pathSegment {
+			return false, nil
+		}
+	}
+
+	return true, params
 }
 
 type Server struct {
@@ -78,8 +181,9 @@ func (server *Server) Start() {
 		handled := false
 		for i := range server.routes {
 			route := &server.routes[i]
-			if r.URL.Path == route.Path {
+			if matches, params := matchRoute(route.Pattern, r.URL.Path); matches {
 				request := NewRequest(*r)
+				request.routeParams = params
 				handleRequest(w, *r, request, *server, route.Handler(request), route)
 				handled = true
 				break
@@ -122,14 +226,13 @@ func (server *Server) Start() {
 	}
 }
 
-func (server *Server) AddRoute(path string, handler func(request Request) Response) *Route {
+func (server *Server) AddRoute(pattern string, handler func(request Request) Response) *Route {
 	route := Route{
-		Path:           path,
+		Pattern:        parseRoutePattern(pattern),
 		Handler:        handler,
 		AllowedMethods: []string{"GET"},
 	}
 	server.routes = append(server.routes, route)
-
 	return &server.routes[len(server.routes)-1]
 }
 

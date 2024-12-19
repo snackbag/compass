@@ -16,7 +16,12 @@ type Request struct {
 	FullRequest http.Request
 	Cookies     []*http.Cookie
 
-	r http.Request
+	routeParams map[string]string
+	r           http.Request
+}
+
+func (request *Request) GetParam(name string) string {
+	return request.routeParams[name]
 }
 
 func NewRequest(r http.Request) Request {
@@ -32,8 +37,8 @@ func NewRequest(r http.Request) Request {
 		UserAgent:   r.UserAgent(),
 		FullRequest: r,
 		Cookies:     r.Cookies(),
-
-		r: r,
+		routeParams: make(map[string]string),
+		r:           r,
 	}
 }
 
