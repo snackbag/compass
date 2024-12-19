@@ -36,6 +36,18 @@ func main() {
 		return resp
 	})
 
+	server.AddRoute("/clear", func(request compass.Request) compass.Response {
+		session := request.GetSession()
+		if session == nil {
+			return compass.Text("You do not have any session saved")
+		}
+
+		resp := compass.Text("Cleared session")
+		resp.RemoveCookie(*request.GetCookie("_compassId"))
+
+		return resp
+	})
+
 	server.AddRoute("/test", func(request compass.Request) compass.Response {
 		return compass.Redirect("https://google.com/")
 	})
