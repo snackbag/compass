@@ -24,6 +24,18 @@ func main() {
 		return resp
 	})
 
+	server.AddRoute("/set", func(request compass.Request) compass.Response {
+		session := request.GetSession()
+		if session != nil {
+			return compass.Text("You already have a set session")
+		}
+
+		resp := compass.Text("Session set!")
+		resp.SetSession(compass.NewSession(&server))
+
+		return resp
+	})
+
 	server.AddRoute("/test", func(request compass.Request) compass.Response {
 		return compass.Redirect("https://google.com/")
 	})
