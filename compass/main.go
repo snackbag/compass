@@ -172,7 +172,7 @@ func NewLogger() Logger {
 	return &SimpleLogger{}
 }
 
-func (server *Server) setSessionSecret(secret string) {
+func (server *Server) SetSessionSecret(secret string) {
 	if server.sessionSecret == nil {
 		panic("Cannot set session secret on a server that already has a set secret")
 	}
