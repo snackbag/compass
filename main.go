@@ -42,7 +42,7 @@ func main() {
 		}
 
 		resp := compass.Text("Cleared session")
-		resp.RemoveCookie(*request.GetCookie("_compassId"))
+		resp.ClearSession()
 
 		return resp
 	})
