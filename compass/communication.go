@@ -95,6 +95,11 @@ func (resp *Response) RemoveCookie(cookie http.Cookie) {
 	resp.removedCookies = append(resp.removedCookies, cookie.Name)
 }
 
+func (resp *Response) RemoveCookieByName(name string) {
+	delete(resp.cookies, name)
+	resp.removedCookies = append(resp.removedCookies, name)
+}
+
 func (resp *Response) SetSession(session *Session) {
 	resp.SetCookie(http.Cookie{Name: "_compassId", Value: session.Encrypt(), MaxAge: 0})
 }
