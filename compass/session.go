@@ -158,7 +158,35 @@ func (session *Session) ResetTransaction() {
 	session.transaction = make(map[string]interface{})
 }
 
-func DecryptSessionID(server *Server, id string) string {
+func GetSessionById(server *Server, id string) *Session {
+	newId := DecryptSessionID(server, id)
+	path := fmt.Sprintf("%s%c%s.json", server.SessionDirectory, filepath.Separator, newId)
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return nil
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+
+	var sessionData map[string]interface{}
+
+	if err := json.Unmarshal(data, &sessionData); err != nil {
+		return nil
+	}
+
+	newSession := &Session{
+		Server:      server,
+		ID:          newId,
+		transaction: make(map[string]interface{}),
+	}
+
+	return newSession
+}
+
+func DecryptSessionID(server *Server, id string) UUID {
 	hashedKey := sha256.Sum256([]byte(*server.sessionSecret))
 	block, err := aes.NewCipher(hashedKey[:])
 	if err != nil {
@@ -180,5 +208,17 @@ func DecryptSessionID(server *Server, id string) string {
 	stream := cipher.NewCFBDecrypter(block, iv)
 	stream.XORKeyStream(cipherBytes, cipherBytes)
 
-	return string(cipherBytes)
+	uuid := UUIDFromBytes(cipherBytes)
+	return uuid
+}
+
+func UUIDFromBytes(bytes []byte) UUID {
+	if len(bytes) != 16 {
+		panic(fmt.Sprintf("invalid UUID byte slice length: expected 16, got %d", len(bytes)))
+	}
+
+	var uuid UUID
+	copy(uuid[:], bytes)
+
+	return uuid
 }
