@@ -133,6 +133,7 @@ type Server struct {
 	StaticRoute        string
 	TemplatesDirectory string
 	SessionDirectory   string
+	sessionSecret      *string
 
 	routes          []Route
 	notFoundHandler func(request Request) Response
@@ -154,6 +155,7 @@ func NewServer() Server {
 		StaticRoute:        "/static",
 		TemplatesDirectory: "templates",
 		SessionDirectory:   fmt.Sprintf(".compass%csessions", filepath.Separator),
+		sessionSecret:      nil,
 		routes:             []Route{},
 		notFoundHandler: func(request Request) Response {
 			return TextWithCode(fmt.Sprintf(
@@ -170,7 +172,19 @@ func NewLogger() Logger {
 	return &SimpleLogger{}
 }
 
+func (server *Server) setSessionSecret(secret string) {
+	if server.sessionSecret == nil {
+		panic("Cannot set session secret on a server that already has a set secret")
+	}
+
+	server.sessionSecret = &secret
+}
+
 func (server *Server) Start() {
+	if server.sessionSecret == nil {
+		server.Logger.Error("CRITICAL: Session secret is not set. Please set this to something secure.")
+	}
+
 	if _, err := os.Stat(server.StaticDirectory); os.IsNotExist(err) {
 		server.Logger.Warn(fmt.Sprintf("static directory '%s' does not exist.", server.StaticDirectory))
 	}
