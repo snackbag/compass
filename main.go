@@ -7,6 +7,7 @@ import (
 
 func main() {
 	server := compass.NewServer()
+	server.SetSessionSecret("dev")
 
 	server.AddRoute("/", func(request compass.Request) compass.Response {
 		return compass.Text(fmt.Sprintf("Hey, your IP is %s and you sent a %s request", request.IP, request.Method))
