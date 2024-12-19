@@ -10,7 +10,18 @@ func main() {
 	server.SetSessionSecret("dev")
 
 	server.AddRoute("/", func(request compass.Request) compass.Response {
-		return compass.Text(fmt.Sprintf("Hey, your IP is %s and you sent a %s request", request.IP, request.Method))
+		session := request.GetSession()
+		if session == nil {
+			return compass.Text("No session")
+		}
+
+		session.WriteString("bruh", "grahhh")
+		session.WriteBool("imabool", true)
+		session.Commit()
+
+		resp := compass.Text(fmt.Sprintf("Hey, your IP is %s and you sent a %s request", request.IP, request.Method))
+		resp.SetSession(session)
+		return resp
 	})
 
 	server.AddRoute("/test", func(request compass.Request) compass.Response {
