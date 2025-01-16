@@ -9,6 +9,11 @@ func main() {
 	server := compass.NewServer()
 	server.SetSessionSecret("dev")
 
+	server.SetBeforeRequestHandler(func(request compass.Request) *compass.Response {
+		resp := compass.Text("test 123")
+		return &resp
+	})
+
 	server.AddRoute("/", func(request compass.Request) compass.Response {
 		session := request.GetSession()
 		if session == nil {
