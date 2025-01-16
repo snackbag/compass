@@ -2,7 +2,6 @@ package compass
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -137,8 +136,6 @@ func handleRequest(w http.ResponseWriter, r http.Request, request Request, serve
 			Expires: time.Unix(0, 0),
 			MaxAge:  -1,
 		})
-
-		fmt.Println("rm cookie")
 	}
 
 	for _, cookie := range response.cookies {
