@@ -11,6 +11,11 @@ func main() {
 
 	server.SetBeforeRequestHandler(func(request compass.Request) *compass.Response {
 		resp := compass.Text("test 123")
+
+		if request.URL.Path != "/testing" {
+			return nil
+		}
+
 		return &resp
 	})
 
