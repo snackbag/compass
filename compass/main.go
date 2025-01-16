@@ -219,7 +219,6 @@ func (server *Server) Start() {
 		for i := range server.routes {
 			route := &server.routes[i]
 			if matches, params := matchRoute(route.Pattern, r.URL.Path); matches {
-				request := NewRequest(*r, server)
 				request.routeParams = params
 				handleRequest(w, *r, request, *server, route.Handler(request), route)
 				handled = true
