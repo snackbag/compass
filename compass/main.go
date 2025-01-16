@@ -253,25 +253,30 @@ func (server *Server) Start() {
 }
 
 func (server *Server) AddRoute(pattern string, handler func(request Request) Response) *Route {
-	route := Route{
+	route := &Route{
 		Pattern:        parseRoutePattern(pattern),
 		Handler:        handler,
 		AllowedMethods: []string{"GET"},
 	}
-	server.routes = append(server.routes, route)
-	return &server.routes[len(server.routes)-1]
+	server.routes = append(server.routes, *route)
+	return route
 }
 
 func (server *Server) SetAllowedMethod(route *Route, method string, allowed bool) {
-	if allowed {
-		if slices.Contains(route.AllowedMethods, method) {
-			return
+	for i := range server.routes {
+		if server.routes[i].Pattern.raw == route.Pattern.raw {
+			if allowed {
+				if !slices.Contains(server.routes[i].AllowedMethods, method) {
+					server.routes[i].AllowedMethods = append(server.routes[i].AllowedMethods, method)
+				}
+			} else {
+				server.routes[i].AllowedMethods = slices.DeleteFunc(server.routes[i].AllowedMethods, func(m string) bool {
+					return m == method
+				})
+			}
+			route.AllowedMethods = server.routes[i].AllowedMethods
+			break
 		}
-		route.AllowedMethods = append(route.AllowedMethods, method)
-	} else {
-		route.AllowedMethods = slices.DeleteFunc(route.AllowedMethods, func(m string) bool {
-			return m == method
-		})
 	}
 }
 
