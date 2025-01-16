@@ -70,5 +70,20 @@ func main() {
 		return compass.Text(fmt.Sprintf("P1 %s (@%s) P3: %s", part1, part2, part3))
 	})
 
+	postme := server.AddRoute("/postme", func(request compass.Request) compass.Response {
+		if request.Method == "POST" {
+			return compass.Redirect("/postwork")
+		}
+
+		return compass.Text("<html><form method=\"post\"><input type=\"submit\"/></form></html>")
+	})
+
+	postwork := server.AddRoute("/postwork", func(request compass.Request) compass.Response {
+		return compass.Text("Yeah! " + request.Method)
+	})
+
+	server.SetAllowedMethod(postme, "POST", true)
+	server.SetAllowedMethod(postwork, "POST", true)
+
 	server.Start()
 }
