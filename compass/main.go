@@ -205,6 +205,16 @@ func (server *Server) Start() {
 
 	// Handle routes
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Handle before request
+		request := NewRequest(*r, server)
+		if server.beforeRequestHandler != nil {
+			brhResp := server.beforeRequestHandler(NewRequest(*r, server))
+			if brhResp != nil {
+				handleRequest(w, *r, request, *server, *brhResp, nil)
+				return
+			}
+		}
+
 		handled := false
 		for i := range server.routes {
 			route := &server.routes[i]
