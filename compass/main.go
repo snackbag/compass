@@ -135,8 +135,9 @@ type Server struct {
 	SessionDirectory   string
 	sessionSecret      *string
 
-	routes          []Route
-	notFoundHandler func(request Request) Response
+	routes               []Route
+	notFoundHandler      func(request Request) Response
+	beforeRequestHandler func(request Request) *Response
 }
 
 type Logger interface {
@@ -282,4 +283,8 @@ func (server *Server) SetAllowedMethod(route *Route, method string, allowed bool
 
 func (server *Server) SetNotFoundHandler(handler func(request Request) Response) {
 	server.notFoundHandler = handler
+}
+
+func (server *Server) SetBeforeRequestHandler(handler func(request Request) *Response) {
+	server.beforeRequestHandler = handler
 }
