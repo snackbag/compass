@@ -37,7 +37,7 @@ func (parser *FillParser) Convert() string {
 	converted := ""
 	stack := make([]string, 0) // Track nested if conditions
 
-	// none = 0, var = 1, action = 2
+	// none = 0, var = 1, action = 2, insert = 3
 	inPart := 0
 	lastChars := ""
 	skipContent := false
@@ -75,6 +75,16 @@ func (parser *FillParser) Convert() string {
 				continue
 			}
 			inPart = 2
+			lastChars = ""
+			continue
+		} else if inPart == 0 && char == "@" {
+			if lastChars != "<" {
+				if !skipContent {
+					converted += char
+				}
+				continue
+			}
+			inPart = 3
 			lastChars = ""
 			continue
 		} else if inPart == 0 && lastChars == "<" {
@@ -135,7 +145,20 @@ func (parser *FillParser) Convert() string {
 			continue
 		}
 
-		if inPart == 1 || inPart == 2 {
+		if inPart == 3 && strings.HasSuffix(lastChars, "/>") {
+			lastChars = strings.TrimSuffix(lastChars, "/>")
+			if !skipContent {
+				converted += parser.context.GetVariable(lastChars)
+			}
+			if !skipContent {
+				converted += char
+			}
+			inPart = 0
+			lastChars = ""
+			continue
+		}
+
+		if inPart == 1 || inPart == 2 || inPart == 3 {
 			lastChars += char
 			continue
 		}
