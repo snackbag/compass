@@ -16,7 +16,7 @@ type Component struct {
 }
 
 func (server *Server) ReloadComponents() error {
-	files, err := GetFilesWithExtension(server.ComponentsDirectory, ".html")
+	files, err := getFilesWithExtension(server.ComponentsDirectory, ".html")
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (server *Server) ReloadComponents() error {
 	return nil
 }
 
-func GetFilesWithExtension(dir string, extension string) ([]string, error) {
+func getFilesWithExtension(dir string, extension string) ([]string, error) {
 	var files []string
 
 	if !strings.HasPrefix(extension, ".") {
