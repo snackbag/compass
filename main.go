@@ -66,7 +66,7 @@ func main() {
 	})
 
 	server.AddRoute("/test2", func(request compass.Request) compass.Response {
-		ctx := compass.NewTemplateContext(request)
+		ctx := compass.NewTemplateContext(&server)
 		ctx.SetVariable("test", false)
 
 		return compass.Fill("example.html", ctx, &server)
