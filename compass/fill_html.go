@@ -196,13 +196,17 @@ func (ctx *TemplateContext) EvaluateVariable(key string) bool {
 	}
 }
 
-func Fill(template string, ctx TemplateContext, server Server) Response {
+func Fill(template string, ctx TemplateContext, server *Server) Response {
 	byteBody, err := os.ReadFile(filepath.Join(server.TemplatesDirectory, template))
 	if err != nil {
 		panic(err)
 	}
 
 	body := string(byteBody)
-	parser := FillParser{Contents: body, context: ctx, col: -1, line: 0}
+	return FillRaw(body, ctx, server)
+}
+
+func FillRaw(content string, ctx TemplateContext, server *Server) Response {
+	parser := FillParser{Contents: content, context: ctx, col: -1, line: 0}
 	return Text(parser.Convert())
 }
