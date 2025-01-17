@@ -50,16 +50,16 @@ func (server *Server) ReloadComponents() error {
 func (server *Server) StylizeComponent(name string, vars map[string]interface{}, ctx *TemplateContext) (string, error) {
 	component, ok := server.components[name]
 	if !ok {
-		return "", errors.New("cannot find token by name '" + name + "'")
-	}
-
-	for k, v := range vars {
-		component.vars[k] = v
+		return "", errors.New("cannot find component by name '" + name + "'")
 	}
 
 	newDat := *ctx
 	for k, v := range component.vars {
 		newDat.SetVariable("&"+k, v)
+	}
+
+	for k, v := range vars {
+		component.vars[k] = v
 	}
 
 	return FillRaw(component.content, newDat, server).Content, nil
