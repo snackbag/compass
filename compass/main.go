@@ -127,15 +127,17 @@ func matchRoute(pattern RoutePattern, path string) (bool, map[string]string) {
 }
 
 type Server struct {
-	Port               int
-	Logger             Logger
-	StaticDirectory    string
-	StaticRoute        string
-	TemplatesDirectory string
-	SessionDirectory   string
-	sessionSecret      *string
+	Port                int
+	Logger              Logger
+	StaticDirectory     string
+	StaticRoute         string
+	TemplatesDirectory  string
+	ComponentsDirectory string
+	SessionDirectory    string
+	sessionSecret       *string
 
 	routes               []Route
+	components           []*Component
 	notFoundHandler      func(request Request) Response
 	beforeRequestHandler func(request Request) *Response
 }
@@ -150,14 +152,16 @@ type Logger interface {
 
 func NewServer() Server {
 	return Server{
-		Port:               3000,
-		Logger:             NewLogger(),
-		StaticDirectory:    "static",
-		StaticRoute:        "/static",
-		TemplatesDirectory: "templates",
-		SessionDirectory:   fmt.Sprintf(".compass%csessions", filepath.Separator),
-		sessionSecret:      nil,
-		routes:             []Route{},
+		Port:                3000,
+		Logger:              NewLogger(),
+		StaticDirectory:     "static",
+		StaticRoute:         "/static",
+		TemplatesDirectory:  "templates",
+		ComponentsDirectory: "components",
+		SessionDirectory:    fmt.Sprintf(".compass%csessions", filepath.Separator),
+		sessionSecret:       nil,
+		components:          make([]*Component, 0),
+		routes:              []Route{},
 		notFoundHandler: func(request Request) Response {
 			return TextWithCode(fmt.Sprintf(
 				"<h1>Not Found</h1>"+
@@ -192,6 +196,15 @@ func (server *Server) Start() {
 
 	if _, err := os.Stat(server.TemplatesDirectory); os.IsNotExist(err) {
 		server.Logger.Warn(fmt.Sprintf("templates directory '%s' does not exist.", server.TemplatesDirectory))
+	}
+
+	if _, err := os.Stat(server.ComponentsDirectory); os.IsNotExist(err) {
+		server.Logger.Warn(fmt.Sprintf("components directory '%s' does not exist.", server.ComponentsDirectory))
+	} else {
+		err = server.ReloadComponents()
+		if err != nil {
+			server.Logger.Error("Failed to load components: " + err.Error())
+		}
 	}
 
 	if _, err := os.Stat(server.SessionDirectory); os.IsNotExist(err) {
