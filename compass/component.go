@@ -47,8 +47,22 @@ func (server *Server) ReloadComponents() error {
 	return nil
 }
 
-func (server *Server) StylizeComponent(name string, vars map[string]interface{}, ctx *TemplateContext) {
+func (server *Server) StylizeComponent(name string, vars map[string]interface{}, ctx *TemplateContext) (string, error) {
+	component, ok := server.components[name]
+	if !ok {
+		return "", errors.New("cannot find token by name '" + name + "'")
+	}
 
+	for k, v := range vars {
+		component.vars[k] = v
+	}
+
+	newDat := *ctx
+	for k, v := range component.vars {
+		newDat.SetVariable("&"+k, v)
+	}
+
+	return FillRaw(component.content, newDat, server).Content, nil
 }
 
 func getFilesWithExtension(dir string, extension string) ([]string, error) {
