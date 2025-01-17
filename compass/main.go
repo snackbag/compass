@@ -137,7 +137,7 @@ type Server struct {
 	sessionSecret       *string
 
 	routes               []Route
-	components           []*Component
+	components           map[string]*Component
 	notFoundHandler      func(request Request) Response
 	beforeRequestHandler func(request Request) *Response
 }
@@ -160,7 +160,7 @@ func NewServer() Server {
 		ComponentsDirectory: "components",
 		SessionDirectory:    fmt.Sprintf(".compass%csessions", filepath.Separator),
 		sessionSecret:       nil,
-		components:          make([]*Component, 0),
+		components:          make(map[string]*Component, 0),
 		routes:              []Route{},
 		notFoundHandler: func(request Request) Response {
 			return TextWithCode(fmt.Sprintf(
