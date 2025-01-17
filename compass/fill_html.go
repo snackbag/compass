@@ -33,7 +33,7 @@ func (ctx *TemplateContext) GetVariable(key string) string {
 	return "Unknown variable: " + key
 }
 
-func (parser *FillParser) Convert() string {
+func (parser *FillParser) Convert(server *Server) string {
 	converted := ""
 	stack := make([]string, 0) // Track nested if conditions
 
@@ -147,8 +147,18 @@ func (parser *FillParser) Convert() string {
 
 		if inPart == 3 && strings.HasSuffix(lastChars, "/>") {
 			lastChars = strings.TrimSuffix(lastChars, "/>")
+
+			args := strings.Split(lastChars, " ")
+			name := args[0]
+
 			if !skipContent {
-				converted += parser.context.GetVariable(lastChars)
+				ctx := NewTemplateContext(server)
+				content, err := server.StylizeComponent(name, make(map[string]interface{}), &ctx)
+				if err != nil {
+					return fmt.Sprintf("Failed to load component: %s", err)
+				}
+
+				converted += content
 			}
 			if !skipContent {
 				converted += char
@@ -208,5 +218,5 @@ func Fill(template string, ctx TemplateContext, server *Server) Response {
 
 func FillRaw(content string, ctx TemplateContext, server *Server) Response {
 	parser := FillParser{Contents: content, context: ctx, col: -1, line: 0}
-	return Text(parser.Convert())
+	return Text(parser.Convert(server))
 }
