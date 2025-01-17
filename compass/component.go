@@ -21,9 +21,12 @@ func (server *Server) ReloadComponents() error {
 		return err
 	}
 
-	server.components = make([]*Component, 0)
+	server.components = make(map[string]*Component, 0)
 
 	for _, file := range files {
+		_fn := strings.Split(file, string(filepath.Separator))
+		fileName := strings.TrimSuffix(_fn[len(_fn)-1], ".html")
+
 		read, _ := os.ReadFile(file)
 		content := string(read)
 		split := strings.Split(content, "// CONTENT //")
@@ -38,10 +41,14 @@ func (server *Server) ReloadComponents() error {
 			return errors.New("at '" + file + "' " + err.Error())
 		}
 
-		server.components = append(server.components, &Component{name: strings.TrimSuffix(file, ".html"), vars: vars, content: split[1]})
+		server.components[fileName] = &Component{name: strings.TrimSuffix(file, ".html"), vars: vars, content: split[1]}
 	}
 
 	return nil
+}
+
+func (server *Server) StylizeComponent(name string, vars map[string]interface{}, ctx *TemplateContext) {
+
 }
 
 func getFilesWithExtension(dir string, extension string) ([]string, error) {
