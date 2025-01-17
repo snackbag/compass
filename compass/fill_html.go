@@ -18,7 +18,7 @@ type TemplateContext struct {
 	variables map[string]Any
 }
 
-func NewTemplateContext(request Request) TemplateContext {
+func NewTemplateContext(server *Server) TemplateContext {
 	return TemplateContext{variables: make(map[string]Any)}
 }
 
