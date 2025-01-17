@@ -5,12 +5,16 @@
     <title>Example</title>
 </head>
 <body>
-    <h1>Hello world! <$test/></h1>
+    <h1>Hello world! <%test/></h1>
     
     <%if test/>
         <p>Test is true</p>
     <%else/>
         <p>Test is not true</p>
     <%end/>
+
+    <hr/>
+    <@test/>
+    <@test "name": "new value", other: true/>
 </body>
 </html>
