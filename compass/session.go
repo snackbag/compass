@@ -87,6 +87,11 @@ func NewSession(server *Server) *Session {
 }
 
 func (session *Session) Read(key string, dflt interface{}) interface{} {
+	transVal, transOk := session.transaction[key]
+	if transOk {
+		return transVal
+	}
+
 	val, ok := session.vars[key]
 	if !ok {
 		return dflt
