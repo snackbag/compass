@@ -1,6 +1,7 @@
 package compass
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -148,12 +149,17 @@ func (parser *FillParser) Convert(server *Server) string {
 		if inPart == 3 && strings.HasSuffix(lastChars, "/>") {
 			lastChars = strings.TrimSuffix(lastChars, "/>")
 
-			args := strings.Split(lastChars, " ")
-			name := args[0]
+			args := make(map[string]interface{})
+
+			content := strings.Split(lastChars, " ")
+			name := content[0]
+			err := json.Unmarshal([]byte("{"+strings.Join(content[1:], " ")+"}"), &args)
+			if err != nil {
+				return fmt.Sprintf("Failed to load component variables (%s): %s", name, err)
+			}
 
 			if !skipContent {
-				ctx := NewTemplateContext(server)
-				content, err := server.StylizeComponent(name, make(map[string]interface{}), &ctx)
+				content, err := server.StylizeComponent(name, args, &parser.context)
 				if err != nil {
 					return fmt.Sprintf("Failed to load component: %s", err)
 				}
