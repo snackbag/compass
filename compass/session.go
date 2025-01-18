@@ -220,7 +220,11 @@ func (session *Session) ResetTransaction() {
 
 func GetSessionById(server *Server, id string) *Session {
 	newId := DecryptSessionID(server, id)
-	path := fmt.Sprintf("%s%c%s.json", server.SessionDirectory, filepath.Separator, UUIDToString(newId))
+	if newId == nil {
+		return nil
+	}
+
+	path := fmt.Sprintf("%s%c%s.json", server.SessionDirectory, filepath.Separator, UUIDToString(*newId))
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return nil
@@ -239,7 +243,7 @@ func GetSessionById(server *Server, id string) *Session {
 
 	newSession := &Session{
 		Server:      server,
-		ID:          newId,
+		ID:          *newId,
 		transaction: make(map[string]interface{}),
 		vars:        sessionData,
 	}
@@ -247,20 +251,20 @@ func GetSessionById(server *Server, id string) *Session {
 	return newSession
 }
 
-func DecryptSessionID(server *Server, id string) UUID {
+func DecryptSessionID(server *Server, id string) *UUID {
 	hashedKey := sha256.Sum256([]byte(*server.sessionSecret))
 	block, err := aes.NewCipher(hashedKey[:])
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	cipherBytes, err := base64.StdEncoding.DecodeString(id)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	if len(cipherBytes) < aes.BlockSize {
-		panic(errors.New("cipherText too short"))
+		return nil
 	}
 
 	iv := cipherBytes[:aes.BlockSize]
@@ -273,8 +277,8 @@ func DecryptSessionID(server *Server, id string) UUID {
 
 	uuid, err := StringToUUID(uuidStr)
 	if err != nil {
-		panic(fmt.Errorf("failed to convert decrypted string to UUID: %w", err))
+		return nil
 	}
 
-	return uuid
+	return &uuid
 }
