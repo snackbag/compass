@@ -71,6 +71,7 @@ type Session struct {
 	ID     UUID
 
 	transaction map[string]interface{}
+	vars        map[string]interface{}
 }
 
 func NewSession(server *Server) *Session {
@@ -85,32 +86,84 @@ func NewSession(server *Server) *Session {
 	return s
 }
 
+func (session *Session) Read(key string, dflt interface{}) interface{} {
+	file, _ := os.Open(
+		fmt.Sprintf("%s%c%s.json",
+			session.Server.SessionDirectory,
+			filepath.Separator,
+			UUIDToString(session.ID)))
+
+	defer file.Close()
+
+	read, _ := io.ReadAll(file)
+	vars := make(map[string]interface{})
+	err := json.Unmarshal(read, &vars)
+	if err != nil {
+		panic(err)
+	}
+
+	val, ok := vars[key]
+	if !ok {
+		return dflt
+	}
+
+	return val
+}
+
 func (session *Session) WriteString(key string, value string) {
 	session.transaction[key] = value
+}
+
+func (session *Session) ReadString(key string, dflt string) string {
+	return session.Read(key, dflt).(string)
 }
 
 func (session *Session) WriteInt(key string, value int) {
 	session.transaction[key] = value
 }
 
+func (session *Session) ReadInt(key string, dflt int) int {
+	return session.Read(key, dflt).(int)
+}
+
 func (session *Session) WriteInt32(key string, value int32) {
 	session.transaction[key] = value
+}
+
+func (session *Session) ReadInt32(key string, dflt int32) int32 {
+	return session.Read(key, dflt).(int32)
 }
 
 func (session *Session) WriteInt64(key string, value int64) {
 	session.transaction[key] = value
 }
 
+func (session *Session) ReadInt64(key string, dflt int64) int64 {
+	return session.Read(key, dflt).(int64)
+}
+
 func (session *Session) WriteBool(key string, value bool) {
 	session.transaction[key] = value
+}
+
+func (session *Session) ReadBool(key string, dflt bool) bool {
+	return session.Read(key, dflt).(bool)
 }
 
 func (session *Session) WriteFloat32(key string, value float32) {
 	session.transaction[key] = value
 }
 
+func (session *Session) ReadFloat32(key string, dflt float32) float32 {
+	return session.Read(key, dflt).(float32)
+}
+
 func (session *Session) WriteFloat64(key string, value float64) {
 	session.transaction[key] = value
+}
+
+func (session *Session) ReadFloat64(key string, dflt float64) float64 {
+	return session.Read(key, dflt).(float64)
 }
 
 func (session *Session) Commit() {
