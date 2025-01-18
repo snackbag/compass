@@ -130,7 +130,9 @@ func TextWithCode(content string, code int) Response {
 func handleRequest(w http.ResponseWriter, r http.Request, request Request, server Server, response Response, route *Route) {
 	if server.ReloadComponentsOnRequest {
 		err := server.ReloadComponents()
-		panic(err)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	for _, cookie := range response.removedCookies {
