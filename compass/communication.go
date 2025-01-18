@@ -128,6 +128,11 @@ func TextWithCode(content string, code int) Response {
 }
 
 func handleRequest(w http.ResponseWriter, r http.Request, request Request, server Server, response Response, route *Route) {
+	if server.ReloadComponentsOnRequest {
+		err := server.ReloadComponents()
+		panic(err)
+	}
+
 	for _, cookie := range response.removedCookies {
 		http.SetCookie(w, &http.Cookie{
 			Name:    cookie,

@@ -136,10 +136,11 @@ type Server struct {
 	SessionDirectory    string
 	sessionSecret       *string
 
-	routes               []Route
-	components           map[string]*Component
-	notFoundHandler      func(request Request) Response
-	beforeRequestHandler func(request Request) *Response
+	routes                    []Route
+	components                map[string]*Component
+	notFoundHandler           func(request Request) Response
+	beforeRequestHandler      func(request Request) *Response
+	ReloadComponentsOnRequest bool
 }
 
 type Logger interface {
@@ -170,6 +171,7 @@ func NewServer() Server {
 					"<i>Compass (%s) Server on port %d<i>",
 				request.URL.Path, runtime.GOOS, 3000), 404)
 		},
+		ReloadComponentsOnRequest: false,
 	}
 }
 
