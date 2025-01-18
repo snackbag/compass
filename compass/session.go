@@ -87,22 +87,7 @@ func NewSession(server *Server) *Session {
 }
 
 func (session *Session) Read(key string, dflt interface{}) interface{} {
-	file, _ := os.Open(
-		fmt.Sprintf("%s%c%s.json",
-			session.Server.SessionDirectory,
-			filepath.Separator,
-			UUIDToString(session.ID)))
-
-	defer file.Close()
-
-	read, _ := io.ReadAll(file)
-	vars := make(map[string]interface{})
-	err := json.Unmarshal(read, &vars)
-	if err != nil {
-		panic(err)
-	}
-
-	val, ok := vars[key]
+	val, ok := session.vars[key]
 	if !ok {
 		return dflt
 	}
@@ -169,6 +154,7 @@ func (session *Session) ReadFloat64(key string, dflt float64) float64 {
 func (session *Session) Commit() {
 	session.WriteInt64("_compassLastUpdate", time.Now().UnixMilli())
 
+	// Write
 	toWrite, err := json.Marshal(session.transaction)
 	if err != nil {
 		panic(err)
@@ -179,6 +165,22 @@ func (session *Session) Commit() {
 			session.Server.SessionDirectory,
 			filepath.Separator,
 			UUIDToString(session.ID)), toWrite, 0644)
+	if err != nil {
+		panic(err)
+	}
+
+	// Prepare reading
+	file, _ := os.Open(
+		fmt.Sprintf("%s%c%s.json",
+			session.Server.SessionDirectory,
+			filepath.Separator,
+			UUIDToString(session.ID)))
+
+	defer file.Close()
+
+	read, _ := io.ReadAll(file)
+	vars := make(map[string]interface{})
+	err = json.Unmarshal(read, &vars)
 	if err != nil {
 		panic(err)
 	}
@@ -227,13 +229,14 @@ func GetSessionById(server *Server, id string) *Session {
 	var sessionData map[string]interface{}
 
 	if err := json.Unmarshal(data, &sessionData); err != nil {
-		return nil
+		panic(err)
 	}
 
 	newSession := &Session{
 		Server:      server,
 		ID:          newId,
 		transaction: make(map[string]interface{}),
+		vars:        sessionData,
 	}
 
 	return newSession
