@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/snackbag/compass/compass"
+	"strconv"
 )
 
 func main() {
@@ -55,6 +56,15 @@ func main() {
 		resp.ClearSession()
 
 		return resp
+	})
+
+	server.AddRoute("/get", func(request compass.Request) compass.Response {
+		session := request.GetSession()
+		if session == nil {
+			return compass.Text("No session")
+		}
+
+		return compass.Text(session.ReadString("bruh", "?") + " " + strconv.FormatBool(session.ReadBool("imabool", false)))
 	})
 
 	server.AddRoute("/test", func(request compass.Request) compass.Response {
