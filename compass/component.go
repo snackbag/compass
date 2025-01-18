@@ -59,7 +59,7 @@ func (server *Server) StylizeComponent(name string, vars map[string]interface{},
 	}
 
 	for k, v := range vars {
-		component.vars[k] = v
+		newDat.SetVariable("&"+k, v)
 	}
 
 	return FillRaw(component.content, newDat, server).Content, nil
