@@ -141,6 +141,8 @@ type Server struct {
 	notFoundHandler           func(request Request) Response
 	beforeRequestHandler      func(request Request) *Response
 	ReloadComponentsOnRequest bool
+
+	DefaultTemplateContext *TemplateContext
 }
 
 type Logger interface {
@@ -152,6 +154,7 @@ type Logger interface {
 }
 
 func NewServer() Server {
+	ctx := NewEmptyTemplateContext()
 	return Server{
 		Port:                3000,
 		Logger:              NewLogger(),
@@ -172,6 +175,7 @@ func NewServer() Server {
 				request.URL.Path, runtime.GOOS, 3000), 404)
 		},
 		ReloadComponentsOnRequest: false,
+		DefaultTemplateContext:    &ctx,
 	}
 }
 
