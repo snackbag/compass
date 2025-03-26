@@ -113,7 +113,7 @@ func (session *Session) WriteInt(key string, value int) {
 }
 
 func (session *Session) ReadInt(key string, dflt int) int {
-	return session.Read(key, dflt).(int)
+	return int(session.Read(key, dflt).(float64))
 }
 
 func (session *Session) WriteInt32(key string, value int32) {
@@ -121,7 +121,7 @@ func (session *Session) WriteInt32(key string, value int32) {
 }
 
 func (session *Session) ReadInt32(key string, dflt int32) int32 {
-	return session.Read(key, dflt).(int32)
+	return int32(session.Read(key, dflt).(float64))
 }
 
 func (session *Session) WriteInt64(key string, value int64) {
@@ -129,7 +129,7 @@ func (session *Session) WriteInt64(key string, value int64) {
 }
 
 func (session *Session) ReadInt64(key string, dflt int64) int64 {
-	return session.Read(key, dflt).(int64)
+	return int64(session.Read(key, dflt).(float64))
 }
 
 func (session *Session) WriteBool(key string, value bool) {
@@ -145,7 +145,7 @@ func (session *Session) WriteFloat32(key string, value float32) {
 }
 
 func (session *Session) ReadFloat32(key string, dflt float32) float32 {
-	return session.Read(key, dflt).(float32)
+	return float32(session.Read(key, dflt).(float64))
 }
 
 func (session *Session) WriteFloat64(key string, value float64) {
