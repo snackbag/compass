@@ -218,16 +218,20 @@ func (ctx *TemplateContext) EvaluateVariable(key string) bool {
 }
 
 func Fill(template string, ctx TemplateContext, server *Server) Response {
+	return FillWithCode(template, ctx, server, 200)
+}
+
+func FillWithCode(template string, ctx TemplateContext, server *Server, code int) Response {
 	byteBody, err := os.ReadFile(filepath.Join(server.TemplatesDirectory, template))
 	if err != nil {
 		panic(err)
 	}
 
 	body := string(byteBody)
-	return FillRaw(body, ctx, server)
+	return FillRaw(body, ctx, server, code)
 }
 
-func FillRaw(content string, ctx TemplateContext, server *Server) Response {
+func FillRaw(content string, ctx TemplateContext, server *Server, code int) Response {
 	parser := FillParser{Contents: content, context: ctx, col: -1, line: 0}
-	return Text(parser.Convert(server))
+	return TextWithCode(parser.Convert(server), code)
 }
