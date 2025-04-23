@@ -62,7 +62,7 @@ func (server *Server) StylizeComponent(name string, vars map[string]interface{},
 		newDat.SetVariable("&"+k, v)
 	}
 
-	return FillRaw(component.content, newDat, server).Content, nil
+	return FillRaw(component.content, newDat, server, 200).Content, nil
 }
 
 func getFilesWithExtension(dir string, extension string) ([]string, error) {
