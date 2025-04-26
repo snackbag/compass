@@ -20,11 +20,6 @@ type TemplateContext struct {
 }
 
 func NewTemplateContext(server *Server) TemplateContext {
-	ctx := *server.DefaultTemplateContext
-	return ctx
-}
-
-func NewEmptyTemplateContext() TemplateContext {
 	return TemplateContext{variables: make(map[string]Any)}
 }
 
