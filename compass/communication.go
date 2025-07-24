@@ -77,9 +77,10 @@ func (request *Request) GetSession() *Session {
 }
 
 type Response struct {
-	IsRedirect bool
-	Code       int
-	Content    string
+	IsRedirect  bool
+	ContentType string
+	Code        int
+	Content     string
 
 	cookies        map[string]http.Cookie
 	removedCookies []string
@@ -108,7 +109,11 @@ func (resp *Response) ClearSession() {
 }
 
 func NewResponse(isRedirect bool, code int, content string) Response {
-	return Response{IsRedirect: isRedirect, Code: code, Content: content, cookies: make(map[string]http.Cookie)}
+	return NewResponseWithContentType(isRedirect, "", code, content)
+}
+
+func NewResponseWithContentType(isRedirect bool, contentType string, code int, content string) Response {
+	return Response{IsRedirect: isRedirect, ContentType: contentType, Code: code, Content: content, cookies: make(map[string]http.Cookie)}
 }
 
 func Redirect(target string) Response {
@@ -125,6 +130,14 @@ func Text(content string) Response {
 
 func TextWithCode(content string, code int) Response {
 	return NewResponse(false, code, content)
+}
+
+func Json(content string) Response {
+	return NewResponseWithContentType(false, "application/json", 200, content)
+}
+
+func JsonWithCode(content string, code int) Response {
+	return NewResponseWithContentType(false, "application/json", code, content)
 }
 
 func handleRequest(w http.ResponseWriter, r http.Request, request Request, server Server, response Response, route *Route) {
@@ -161,6 +174,9 @@ func handleRequest(w http.ResponseWriter, r http.Request, request Request, serve
 	if response.IsRedirect {
 		http.Redirect(w, &r, response.Content, response.Code)
 	} else {
+		if response.ContentType != "" {
+			w.Header().Set("Content-Type", response.ContentType)
+		}
 		w.WriteHeader(response.Code)
 		w.Write([]byte(response.Content))
 	}

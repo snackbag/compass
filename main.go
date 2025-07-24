@@ -102,6 +102,10 @@ func main() {
 		return compass.Text("Yeah! " + request.Method)
 	})
 
+	server.AddRoute("/json", func(request compass.Request) compass.Response {
+		return compass.Json("{\"wowie\": \"zowie\"}")
+	})
+
 	server.SetAllowedMethod(postme, "POST", true)
 	server.SetAllowedMethod(postwork, "POST", true)
 
