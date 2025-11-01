@@ -25,3 +25,7 @@ func (n *TextNode) String() string {
 func (n *TextNode) Equals(target Node) bool {
 	return target.Type() == n.Type() && target.String() == n.String()
 }
+
+func NewTextNode(value string) *TextNode {
+	return &TextNode{Value: value}
+}
