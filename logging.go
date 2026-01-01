@@ -9,6 +9,8 @@ type Logger interface {
 	Info(message string)
 	Warn(message string)
 	Error(message string)
+
+	Request(method string, ip string, route string, code int, useragent string)
 }
 
 type SimpleLogger struct {
@@ -36,6 +38,25 @@ func (s *SimpleLogger) Warn(message string) {
 
 func (s *SimpleLogger) Error(message string) {
 	s.log("\033[1;31m", "ERROR", message)
+}
+
+func (s *SimpleLogger) Request(method string, ip string, route string, code int, useragent string) {
+	var colorCode string
+	switch {
+	case code >= 200 && code < 300:
+		colorCode = "\033[1;32m"
+	case code >= 300 && code < 400:
+		colorCode = "\033[1;33m"
+	case code >= 400 && code < 600:
+		colorCode = "\033[1;31m"
+	default:
+		colorCode = "\033[1;37m"
+	}
+
+	fmt.Printf(
+		"\x1b[0;34m%s %s%d\033[0m - \033[0;35m%s %s\033[0m \033[0;37m\"%s\"",
+		ip, colorCode, code, method, route, useragent,
+	)
 }
 
 func NewSimpleLogger() *SimpleLogger {
