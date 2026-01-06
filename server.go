@@ -90,6 +90,12 @@ func (s *Server) Run() error {
 
 func (s *Server) writeStatic(w http.ResponseWriter, request Request, assetDir string, target string) error {
 	path := filepath.Join(assetDir, "static", target)
+
+	_, err := os.Stat(path)
+	if err != nil {
+		return s.handleNotFound(w, request)
+	}
+
 	file, err := os.Open(path)
 	if err != nil {
 		return err
