@@ -27,7 +27,32 @@ func (r *Route) ToString() string {
 }
 
 func (s *Server) AddRoute(path string, handler func(request Request) Response) {
-	fmt.Println(createParts(path))
+	parts := createParts(path)
+	length := len(parts)
+
+	if length < 1 {
+		s.Logger.Error(fmt.Sprintf("Skipped adding route %q, because it seems to be empty", path))
+		return
+	}
+
+	if _, ok := s.routes[length]; !ok {
+		s.routes[length] = make([]*Route, 0)
+	}
+
+	partIdMap := make(map[string]int)
+	for i, part := range parts {
+		partIdMap[part.id] = i
+	}
+
+	route := &Route{
+		parts:     parts,
+		partIdMap: partIdMap,
+		handler:   handler,
+
+		repr: path,
+	}
+
+	s.routes[length] = append(s.routes[length], route)
 }
 
 func createParts(path string) []routePart {

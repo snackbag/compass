@@ -19,6 +19,8 @@ type Server struct {
 	Config       ServerConfiguration
 	Logger       Logger
 	AlertHandler func(err error)
+
+	routes map[int][]*Route // int = length
 }
 
 func NewStandardConfiguration() ServerConfiguration {
@@ -56,6 +58,8 @@ func NewServer(config ServerConfiguration) *Server {
 		Config:       config,
 		Logger:       NewSimpleLogger(),
 		AlertHandler: func(err error) {},
+
+		routes: make(map[int][]*Route),
 	}
 }
 
