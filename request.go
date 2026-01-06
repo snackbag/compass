@@ -32,3 +32,8 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 	s.Logger.Request(r.Http, 200)
 	return nil
 }
+
+// TODO add customizability
+func (s *Server) handleNotFound(w http.ResponseWriter, r Request) error {
+	return s.write(w, r.Http, []byte("Your requested page does not exist"), http.StatusNotFound)
+}
