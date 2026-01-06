@@ -81,5 +81,9 @@ func createParts(path string) []routePart {
 		parts = append(parts, routePart{id: id, prefix: prefix, suffix: suffix})
 	}
 
+	if len(parts) == 0 {
+		parts = append(parts, routePart{id: "", prefix: "", suffix: ""})
+	}
+
 	return parts
 }
