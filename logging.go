@@ -2,6 +2,7 @@ package compass
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -10,7 +11,7 @@ type Logger interface {
 	Warn(message string)
 	Error(message string)
 
-	Request(method string, ip string, route string, code int, useragent string)
+	Request(r *http.Request, code int)
 }
 
 type SimpleLogger struct {
@@ -40,7 +41,7 @@ func (s *SimpleLogger) Error(message string) {
 	s.log("\033[1;31m", "ERROR", message)
 }
 
-func (s *SimpleLogger) Request(method string, ip string, route string, code int, useragent string) {
+func (s *SimpleLogger) Request(r *http.Request, code int) {
 	var colorCode string
 	switch {
 	case code >= 200 && code < 300:
@@ -56,6 +57,8 @@ func (s *SimpleLogger) Request(method string, ip string, route string, code int,
 	fmt.Printf(
 		"\x1b[0;34m%s %s%d\033[0m - \033[0;35m%s %s\033[0m \033[0;37m\"%s\"",
 		ip, colorCode, code, method, route, useragent,
+		"\x1b[0;34m%s %s%d\033[0m - \033[0;35m%s %s\033[0m \033[0;37m\"%s\"\033[0m\n",
+		r.RemoteAddr, colorCode, code, r.Method, r.URL.Path, r.UserAgent(),
 	)
 }
 
