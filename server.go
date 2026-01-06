@@ -51,8 +51,6 @@ func (c ServerConfiguration) CheckValidity() string {
 
 func NewServer(config ServerConfiguration) *Server {
 	return &Server{
-		Config: config,
-		Logger: NewSimpleLogger(),
 		Config:       config,
 		Logger:       NewSimpleLogger(),
 		AlertHandler: func(err error) {},
