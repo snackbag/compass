@@ -26,6 +26,32 @@ func (r *Route) ToString() string {
 	return r.repr
 }
 
+func (r *Route) matchesRawParts(split []string) bool {
+	for i, str := range split {
+		part := r.parts[i]
+		if !strings.HasPrefix(str, part.prefix) {
+			return false
+		}
+
+		if !strings.HasSuffix(str, part.suffix) {
+			return false
+		}
+
+		minLen := len(part.prefix) + len(part.suffix)
+		maxLen := minLen
+
+		if part.id != "" {
+			maxLen = 2048
+		}
+
+		if len(str) < minLen || len(str) > maxLen {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (s *Server) AddRoute(path string, handler func(request Request) Response) {
 	parts := createParts(path)
 	length := len(parts)
@@ -86,4 +112,26 @@ func createParts(path string) []routePart {
 	}
 
 	return parts
+}
+
+func (s *Server) FindRoute(path string) *Route {
+	split := strings.Split(path, "/")
+	if strings.HasPrefix(path, "/") && len(split) > 1 {
+		split = split[1:]
+	}
+
+	candidates, ok := s.routes[len(split)]
+	if !ok {
+		return nil
+	}
+
+	for _, candidate := range candidates {
+		if !candidate.matchesRawParts(split) {
+			continue
+		}
+
+		return candidate
+	}
+
+	return nil
 }

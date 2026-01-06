@@ -73,6 +73,7 @@ func (s *Server) Run() error {
 	s.Logger.Info(fmt.Sprintf("Server is listening on :%d", s.Config.Port))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		request := NewRequestFromHttp(r)
+		request.Route = s.FindRoute(r.URL.Path)
 
 		if strings.HasPrefix(request.URL.Path, s.Config.StaticUrl) {
 			err := s.writeStatic(w, request, s.Config.AssetDir, strings.TrimPrefix(filepath.Clean(request.URL.Path), s.Config.StaticUrl))
