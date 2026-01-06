@@ -3,7 +3,7 @@ package main
 import "github.com/snackbag/compass"
 
 func main() {
-	server := compass.NewServer()
+	server := compass.NewServer(compass.NewStandardConfiguration())
 
 	server.Logger.Info("I'm simply logging some things")
 	server.Logger.Warn("I warn you about stuff")
