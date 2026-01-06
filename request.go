@@ -24,13 +24,19 @@ func NewRequestFromHttp(r *http.Request) Request {
 }
 
 func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
-	w.WriteHeader(200)
-	_, err := w.Write([]byte("OK"))
+	if r.Route == nil {
+		return s.handleNotFound(w, r)
+	}
+
+	resp := r.Route.handler(r)
+
+	w.WriteHeader(resp.StatusCode)
+	_, err := w.Write(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	s.Logger.Request(r.Http, 200)
+	s.Logger.Request(r.Http, resp.StatusCode)
 	return nil
 }
 
