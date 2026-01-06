@@ -55,8 +55,6 @@ func (s *SimpleLogger) Request(r *http.Request, code int) {
 	}
 
 	fmt.Printf(
-		"\x1b[0;34m%s %s%d\033[0m - \033[0;35m%s %s\033[0m \033[0;37m\"%s\"",
-		ip, colorCode, code, method, route, useragent,
 		"\x1b[0;34m%s %s%d\033[0m - \033[0;35m%s %s\033[0m \033[0;37m\"%s\"\033[0m\n",
 		r.RemoteAddr, colorCode, code, r.Method, r.URL.Path, r.UserAgent(),
 	)
