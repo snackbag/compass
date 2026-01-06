@@ -14,6 +14,22 @@ type routePart struct {
 	suffix string
 }
 
+type Route struct {
+	parts     []routePart
+	partIdMap map[string]int
+	handler   func()
+
+	repr string
+}
+
+func (r *Route) ToString() string {
+	return r.repr
+}
+
+func (s *Server) AddRoute(path string, handler func(request Request) Response) {
+	fmt.Println(createParts(path))
+}
+
 func createParts(path string) []routePart {
 	split := strings.Split(path, "/")
 	parts := make([]routePart, 0)
