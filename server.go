@@ -14,8 +14,9 @@ type ServerConfiguration struct {
 }
 
 type Server struct {
-	Config ServerConfiguration
-	Logger Logger
+	Config       ServerConfiguration
+	Logger       Logger
+	AlertHandler func(err error)
 }
 
 func NewStandardConfiguration() ServerConfiguration {
@@ -52,6 +53,9 @@ func NewServer(config ServerConfiguration) *Server {
 	return &Server{
 		Config: config,
 		Logger: NewSimpleLogger(),
+		Config:       config,
+		Logger:       NewSimpleLogger(),
+		AlertHandler: func(err error) {},
 	}
 }
 
