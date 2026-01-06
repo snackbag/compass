@@ -17,7 +17,7 @@ type routePart struct {
 type Route struct {
 	parts     []routePart
 	partIdMap map[string]int
-	handler   func()
+	handler   func(request Request) Response
 
 	repr string
 }
