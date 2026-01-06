@@ -57,7 +57,7 @@ func NewServer(config ServerConfiguration) *Server {
 	}
 }
 
-// Run starts the server, returns an error when the server crashes
+// Run starts the server, returns an error when the server crashes during startup. All other errors are handled by the Server.AlertHandler
 func (s *Server) Run() error {
 	configValidity := s.Config.CheckValidity()
 	if configValidity != "" {
