@@ -9,6 +9,7 @@ import (
 type Request struct {
 	Method string
 	URL    *url.URL
+	Route  *Route
 
 	Http *http.Request
 }
