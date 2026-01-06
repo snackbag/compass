@@ -64,6 +64,7 @@ func (s *Server) Run() error {
 		return fmt.Errorf("config invalid: %s", configValidity)
 	}
 
+	s.Logger.Info(fmt.Sprintf("Server is listening on :%d", s.Config.Port))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 	})
