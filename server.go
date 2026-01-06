@@ -3,6 +3,8 @@ package compass
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -66,8 +68,61 @@ func (s *Server) Run() error {
 
 	s.Logger.Info(fmt.Sprintf("Server is listening on :%d", s.Config.Port))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		request := NewRequestFromHttp(r)
 
+		if strings.HasPrefix(request.URL.Path, s.Config.StaticUrl) {
+			err := s.writeStatic(w, request, s.Config.AssetDir, strings.TrimPrefix(filepath.Clean(request.URL.Path), s.Config.StaticUrl))
+			if err != nil {
+				s.writeError(w, r, err)
+			}
+
+			return
+		}
+
+		err := s.handleRequest(w, request)
+		if err != nil {
+			s.writeError(w, r, err)
+		}
 	})
 
 	return http.ListenAndServe(fmt.Sprintf(":%d", s.Config.Port), nil)
+}
+
+func (s *Server) writeStatic(w http.ResponseWriter, request Request, assetDir string, target string) error {
+	path := filepath.Join(assetDir, "static", target)
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	stat, err := file.Stat()
+	if err != nil {
+		return err
+	}
+
+	s.Logger.Request(request.Http, http.StatusOK)
+	http.ServeContent(w, request.Http, target, stat.ModTime(), file)
+	return nil
+}
+
+func (s *Server) write(w http.ResponseWriter, r *http.Request, data []byte, status int) error {
+	s.Logger.Request(r, status)
+
+	w.WriteHeader(status)
+	_, err := w.Write(data)
+	if err != nil {
+		return fmt.Errorf("failed to write byte data for status %d: %v", status, err)
+	}
+
+	return nil
+}
+
+func (s *Server) writeError(w http.ResponseWriter, r *http.Request, err error) {
+	s.Logger.Request(r, http.StatusInternalServerError)
+	s.Logger.Error(fmt.Sprintf("Soft capture: %v", err))
+	s.AlertHandler(err)
+
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Write([]byte("There was an internal server error. Try again later."))
 }
