@@ -1,6 +1,7 @@
 package compass
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -28,7 +29,8 @@ func createParts(path string) []routePart {
 			continue
 		}
 
-		id := match[1]    // name inside <>
+		id := match[1] // name inside <>
+		id = id[1 : len(id)-1]
 		rawId := match[0] // full <...>
 		idx := strings.Index(raw, rawId)
 
@@ -39,4 +41,8 @@ func createParts(path string) []routePart {
 	}
 
 	return parts
+}
+
+func (s *Server) AddRoute(path string, handler func(request Request) Response) {
+	fmt.Println(createParts(path))
 }
