@@ -11,6 +11,7 @@ type Response struct {
 	ContentType *string
 	Body        []byte
 	StatusCode  int
+	Headers     map[string]string
 }
 
 func Raw(contentType *string, body []byte, code int) Response {
@@ -20,6 +21,7 @@ func Raw(contentType *string, body []byte, code int) Response {
 		ContentType: contentType,
 		Body:        body,
 		StatusCode:  code,
+		Headers:     make(map[string]string),
 	}
 }
 
@@ -30,6 +32,7 @@ func InternalError(message string, code int) Response {
 		ContentType: nil,
 		Body:        []byte(message),
 		StatusCode:  code,
+		Headers:     make(map[string]string),
 	}
 }
 

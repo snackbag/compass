@@ -35,6 +35,10 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 		return errors.New(string(resp.Body))
 	}
 
+	for key, value := range resp.Headers {
+		w.Header().Set(key, value)
+	}
+
 	if resp.ContentType != nil {
 		w.Header().Set("Content-Type", *resp.ContentType)
 	} else {
