@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/snackbag/compass"
 )
 
@@ -13,8 +12,5 @@ func main() {
 		return compass.Text(param)
 	})
 
-	err := server.Run()
-	if err != nil {
-		server.Logger.Error(fmt.Sprintf("Failed to start: %s", err))
-	}
+	server.MustRun()
 }

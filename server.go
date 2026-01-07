@@ -2,6 +2,7 @@ package compass
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -93,6 +94,13 @@ func (s *Server) Run() error {
 	return http.ListenAndServe(fmt.Sprintf(":%d", s.Config.Port), nil)
 }
 
+func (s *Server) MustRun() {
+	err := s.Run()
+	if err != nil {
+		log.Fatalf("failed to start: %s", err)
+	}
+}
+
 func (s *Server) writeStatic(w http.ResponseWriter, request Request, assetDir string, target string) error {
 	path := filepath.Join(assetDir, "static", target)
 
@@ -141,18 +149,18 @@ func (s *Server) writeError(w http.ResponseWriter, r *http.Request, err error) {
 func splitUrlPath(path string) []string {
 	raw := strings.Split(path, "/")
 	split := make([]string, 0)
-
+	
 	for _, part := range raw {
 		if part == "" {
 			continue
 		}
-
+		
 		split = append(split, part)
 	}
-
+	
 	if len(split) < 1 {
 		split = append(split, "")
 	}
-
+	
 	return split
 }
