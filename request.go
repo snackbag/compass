@@ -45,3 +45,28 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 func (s *Server) handleNotFound(w http.ResponseWriter, r Request) error {
 	return s.write(w, r.Http, []byte(fmt.Sprintf("<html><h1>Not Found</h1><p>The requested route %s was not found on this server.</p></html>", r.URL.Path)), http.StatusNotFound)
 }
+
+// GetRouteParam gets the requested content of the requested id. If nothing was found, it will return an empty string.
+func (r *Request) GetRouteParam(id string) string {
+	if len(id) < 1 {
+		return ""
+	}
+
+	index, ok := r.Route.partIdMap[id]
+	if !ok {
+		return ""
+	}
+
+	split := splitUrlPath(r.URL.Path)
+	if index > len(split)-1 {
+		return ""
+	}
+
+	part := r.Route.parts[index]
+
+	value := split[index]
+	value = strings.TrimPrefix(value, part.prefix)
+	value = strings.TrimSuffix(value, part.suffix)
+
+	return value
+}
