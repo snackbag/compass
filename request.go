@@ -37,6 +37,8 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 
 	if resp.ContentType != nil {
 		w.Header().Set("Content-Type", *resp.ContentType)
+	} else {
+		w.Header().Set("Content-Type", r.Http.Header.Get("Content-Type"))
 	}
 	w.WriteHeader(resp.StatusCode)
 
