@@ -46,12 +46,14 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 		case "--COMPASS-redirect":
 			{
 				http.Redirect(w, r.Http, string(resp.Body), resp.StatusCode)
+				s.Logger.Request(r.Http, resp.StatusCode)
 				return nil
 			}
 		case "--COMPASS-serve":
 			{
 				rs := bytes.NewReader(resp.Body)
 				http.ServeContent(w, r.Http, resp.Headers["-Compass-File-Name"], time.Now(), rs)
+				s.Logger.Request(r.Http, resp.StatusCode)
 			}
 		}
 
