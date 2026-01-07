@@ -3,7 +3,12 @@ package compass
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"regexp"
+	"strings"
 )
+
+var asciiFallback = regexp.MustCompile(`[^A-Za-z0-9 ._-]+`)
 
 type Response struct {
 	internalError bool
@@ -64,4 +69,21 @@ func JsonMarshalWithCode(obj any, code int) Response {
 	}
 
 	return JsonStringWithCode(string(content), code)
+}
+
+func DownloadBytes(filename string, data []byte) Response {
+	return DownloadBytesWithCode(filename, data, 200)
+}
+
+func DownloadBytesWithCode(filename string, data []byte, code int) Response {
+	ascii := strings.TrimSpace(filename)
+	ascii = asciiFallback.ReplaceAllString(ascii, "_")
+
+	if ascii == "" {
+		ascii = "download"
+	}
+
+	resp := Raw(nil, data, code)
+	resp.Headers["Content-Disposition"] = `attachment; filename="` + ascii + `"; filename*=UTF-8''` + url.PathEscape(filename)
+	return resp
 }
