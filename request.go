@@ -1,6 +1,7 @@
 package compass
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -30,8 +31,15 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 	}
 
 	resp := r.Route.handler(r)
+	if resp.internalError {
+		return errors.New(string(resp.Body))
+	}
 
+	if resp.ContentType != nil {
+		w.Header().Set("Content-Type", *resp.ContentType)
+	}
 	w.WriteHeader(resp.StatusCode)
+
 	_, err := w.Write(resp.Body)
 	if err != nil {
 		return err
