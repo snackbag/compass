@@ -1,6 +1,7 @@
 package compass
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -42,5 +43,5 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 
 // TODO add customizability
 func (s *Server) handleNotFound(w http.ResponseWriter, r Request) error {
-	return s.write(w, r.Http, []byte("Your requested page does not exist"), http.StatusNotFound)
+	return s.write(w, r.Http, []byte(fmt.Sprintf("<html><h1>Not Found</h1><p>The requested route %s was not found on this server.</p></html>", r.URL.Path)), http.StatusNotFound)
 }
