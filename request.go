@@ -38,6 +38,10 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 	}
 
 	for key, value := range resp.Headers {
+		if strings.HasPrefix(key, "--COMPASS") {
+			continue
+		}
+
 		w.Header().Set(key, value)
 	}
 
@@ -54,6 +58,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 				rs := bytes.NewReader(resp.Body)
 				http.ServeContent(w, r.Http, resp.Headers["-Compass-File-Name"], time.Now(), rs)
 				s.Logger.Request(r.Http, resp.StatusCode)
+				return nil
 			}
 		}
 
