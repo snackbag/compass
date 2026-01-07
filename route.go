@@ -82,7 +82,7 @@ func (s *Server) AddRoute(path string, handler func(request Request) Response) {
 }
 
 func createParts(path string) []routePart {
-	split := strings.Split(path, "/")
+	split := splitUrlPath(path)
 	parts := make([]routePart, 0)
 
 	for _, raw := range split {
@@ -115,10 +115,7 @@ func createParts(path string) []routePart {
 }
 
 func (s *Server) FindRoute(path string) *Route {
-	split := strings.Split(path, "/")
-	if strings.HasPrefix(path, "/") && len(split) > 1 {
-		split = split[1:]
-	}
+	split := splitUrlPath(path)
 
 	candidates, ok := s.routes[len(split)]
 	if !ok {

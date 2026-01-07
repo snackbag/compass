@@ -137,3 +137,22 @@ func (s *Server) writeError(w http.ResponseWriter, r *http.Request, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
 	w.Write([]byte("There was an internal server error. Try again later."))
 }
+
+func splitUrlPath(path string) []string {
+	raw := strings.Split(path, "/")
+	split := make([]string, 0)
+
+	for _, part := range raw {
+		if part == "" {
+			continue
+		}
+
+		split = append(split, part)
+	}
+
+	if len(split) < 1 {
+		split = append(split, "")
+	}
+
+	return split
+}
