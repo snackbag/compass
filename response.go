@@ -117,3 +117,27 @@ func PermaRedirect(target string) Response {
 	typ := "--COMPASS-redirect"
 	return Raw(&typ, []byte(target), http.StatusPermanentRedirect)
 }
+
+func ServeBytes(data []byte, name string) Response {
+	return ServeBytesWithCode(data, name, 200)
+}
+
+func ServeBytesWithCode(data []byte, name string, code int) Response {
+	typ := "--COMPASS-serve"
+	raw := Raw(&typ, data, code)
+	raw.Headers["-Compass-File-Name"] = name
+	return raw
+}
+
+func ServeFile(path string, name string) Response {
+	return ServeFileWithCode(path, name, 200)
+}
+
+func ServeFileWithCode(path string, name string, code int) Response {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return InternalError(fmt.Sprintf("failed to prepare file data for serve: %s", err), 500)
+	}
+
+	return ServeBytesWithCode(data, name, code)
+}

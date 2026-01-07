@@ -1,11 +1,13 @@
 package compass
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type Request struct {
@@ -40,6 +42,19 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 	}
 
 	if resp.ContentType != nil {
+		switch *resp.ContentType {
+		case "--COMPASS-redirect":
+			{
+				http.Redirect(w, r.Http, string(resp.Body), resp.StatusCode)
+				return nil
+			}
+		case "--COMPASS-serve":
+			{
+				rs := bytes.NewReader(resp.Body)
+				http.ServeContent(w, r.Http, resp.Headers["-Compass-File-Name"], time.Now(), rs)
+			}
+		}
+
 		if *resp.ContentType == "--COMPASS-redirect" {
 			http.Redirect(w, r.Http, string(resp.Body), resp.StatusCode)
 			return nil
