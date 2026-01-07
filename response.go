@@ -3,6 +3,7 @@ package compass
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"regexp"
@@ -100,4 +101,19 @@ func DownloadFileWithCode(filename string, path string, code int) Response {
 	}
 
 	return DownloadBytesWithCode(filename, data, code)
+}
+
+func Redirect(target string, retainMethod bool) Response {
+	typ := "--COMPASS-redirect"
+	status := http.StatusSeeOther
+	if retainMethod {
+		status = http.StatusTemporaryRedirect
+	}
+
+	return Raw(&typ, []byte(target), status)
+}
+
+func PermaRedirect(target string) Response {
+	typ := "--COMPASS-redirect"
+	return Raw(&typ, []byte(target), http.StatusPermanentRedirect)
 }
