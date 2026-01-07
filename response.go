@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -86,4 +87,17 @@ func DownloadBytesWithCode(filename string, data []byte, code int) Response {
 	resp := Raw(nil, data, code)
 	resp.Headers["Content-Disposition"] = `attachment; filename="` + ascii + `"; filename*=UTF-8''` + url.PathEscape(filename)
 	return resp
+}
+
+func DownloadFile(filename string, path string) Response {
+	return DownloadFileWithCode(filename, path, 200)
+}
+
+func DownloadFileWithCode(filename string, path string, code int) Response {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return InternalError(fmt.Sprintf("failed to prepare file data for download: %s", err), 500)
+	}
+
+	return DownloadBytesWithCode(filename, data, code)
 }
