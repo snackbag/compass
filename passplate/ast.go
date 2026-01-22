@@ -12,7 +12,7 @@ func Represent(_n Node, indent int) string {
 			builder := strings.Builder{}
 
 			for _, child := range n.Children {
-				builder.WriteString(Represent(child, indent))
+				builder.WriteString(Represent(child, indent+1))
 				builder.WriteString("\n")
 			}
 
