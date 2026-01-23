@@ -1,6 +1,9 @@
 package passplate
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type BuildState int
 
@@ -32,7 +35,7 @@ func (m *stateMachine) State() BuildState {
 	return m.states[len(m.states)-1]
 }
 
-func Read(raw string) *RootNode {
+func Read(raw string) (*RootNode, error) {
 	buffer := ""
 	s := &stateMachine{make([]BuildState, 0)}
 	s.states = append(s.states, StateIdle)
@@ -82,6 +85,10 @@ func Read(raw string) *RootNode {
 			if !inString && strings.HasSuffix(buffer, "/>") {
 				s.Pop()
 
+				expr, err := createExpression(strings.TrimSuffix(buffer, "/>"))
+				if err != nil {
+					return root, fmt.Errorf("failed to create expression: %s", err)
+				}
 				node := NewExprNode()
 				node.Expression = expr
 				cursor.Children = append(cursor.Children, node)

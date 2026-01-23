@@ -6,5 +6,11 @@ import (
 )
 
 func main() {
-	fmt.Println(passplate.Represent(passplate.Read("<h1>Good morning, <$username/>!</h1>"), -1))
+	text := `<h1>Good morning, <$username/>.</h1><p>You are<%if role == "admin"/>an admin<%elif role == "cool"/>pretty cool<%else/>just chill like that<%end/></p>
+`
+	node, err := passplate.Read(text)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(passplate.Represent(node, 0))
 }
