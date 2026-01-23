@@ -7,6 +7,9 @@ type BuildState int
 const (
 	StateIdle = iota
 	StateExpr
+	StateIf
+	StateElif
+	StateElse
 )
 
 type stateMachine struct {
@@ -47,9 +50,28 @@ func Read(raw string) *RootNode {
 			if strings.HasSuffix(buffer, "<$") {
 				s.Push(StateExpr)
 
-				cursor.Children = append(cursor.Children, NewTextNode(strings.TrimSuffix(buffer, "<$")))
+				cursor.Children = appendBuffer(cursor.Children, buffer, "<$")
 				buffer = ""
 				cursor.Children = append(cursor.Children)
+			} else if strings.HasSuffix(buffer, "<%if ") {
+				s.Push(StateIf)
+
+				cursor.Children = appendBuffer(cursor.Children, buffer, "<%if ")
+				buffer = ""
+			} else if strings.HasSuffix(buffer, "<%elif ") {
+				s.Push(StateElif)
+
+				cursor.Children = appendBuffer(cursor.Children, buffer, "<%elif ")
+				buffer = ""
+			} else if strings.HasSuffix(buffer, "<%else/>") {
+				s.Push(StateElse)
+
+				cursor.Children = appendBuffer(cursor.Children, buffer, "<%else/>")
+				buffer = ""
+			} else if strings.HasSuffix(buffer, "<%end/>") {
+				cursor.Children = appendBuffer(cursor.Children, buffer, "<%end/>")
+				buffer = ""
+				cursor = cursor.Parent
 			}
 
 		case StateExpr:
@@ -66,6 +88,49 @@ func Read(raw string) *RootNode {
 
 				buffer = ""
 			}
+
+		case StateIf:
+			if strings.HasSuffix(buffer, "\"") {
+				inString = !inString
+			}
+
+			if !inString && strings.HasSuffix(buffer, "/>") {
+				s.Pop()
+
+				clause := NewRootNode()
+				clause.Parent = cursor
+				node := &IfNode{IfClause: clause, IfExpr: createBooleanExpr(strings.TrimSuffix(buffer, "/>")), ElseIfs: make(map[*BooleanExpr]*RootNode)}
+				cursor.Children = append(cursor.Children, node)
+				cursor = clause
+
+				buffer = ""
+			}
+
+		case StateElif:
+			if strings.HasSuffix(buffer, "\"") {
+				inString = !inString
+			}
+
+			if !inString && strings.HasSuffix(buffer, "/>") {
+				s.Pop()
+
+				clause := NewRootNode()
+				clause.Parent = cursor.Parent
+				node := cursor.Parent.LastChild().(*IfNode)
+				node.ElseIfs[createBooleanExpr(strings.TrimSuffix(buffer, "/>"))] = clause
+				cursor = clause
+
+				buffer = ""
+			}
+
+		case StateElse:
+			s.Pop()
+
+			rn := NewRootNode()
+			rn.Parent = cursor.Parent
+			node := cursor.Parent.LastChild().(*IfNode)
+			node.ElseClause = rn
+			cursor = rn
 		}
 	}
 
@@ -78,4 +143,8 @@ func createExpressions(buffer string) []Expression {
 	rv = append(rv, &VariableExpr{Name: buffer})
 
 	return rv
+}
+
+func appendBuffer(children []Node, buffer string, suffix string) []Node {
+	return append(children, NewTextNode(strings.TrimSuffix(buffer, suffix)))
 }

@@ -36,6 +36,10 @@ func NewRootNode() *RootNode {
 	return &RootNode{make([]Node, 0), nil}
 }
 
+func (n *RootNode) LastChild() Node {
+	return n.Children[len(n.Children)-1]
+}
+
 //
 // Text Node
 //
