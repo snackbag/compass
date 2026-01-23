@@ -19,6 +19,18 @@ func (e *VariableExpr) Repr() string {
 	return fmt.Sprintf("{$%s}", e.Name)
 }
 
+type TextExpression struct {
+	Value string
+}
+
+func (e *TextExpression) Eval() string {
+	return e.Value
+}
+
+func (e *TextExpression) Repr() string {
+	return fmt.Sprintf("{%q}", e.Value)
+}
+
 type BooleanExpr struct {
 	Left  Expression
 	Right Expression
