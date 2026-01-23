@@ -22,6 +22,7 @@ type Node interface {
 
 type RootNode struct {
 	Children []Node
+	Parent   *RootNode
 }
 
 func (n *RootNode) Kind() NodeKind {
@@ -29,7 +30,7 @@ func (n *RootNode) Kind() NodeKind {
 }
 
 func NewRootNode() *RootNode {
-	return &RootNode{make([]Node, 0)}
+	return &RootNode{make([]Node, 0), nil}
 }
 
 //
