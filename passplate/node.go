@@ -61,35 +61,15 @@ func NewTextNode(content string) *TextNode {
 //
 
 type ExprNode struct {
-	Expressions []Expression
+	Expression Expression
 }
 
 func (n *ExprNode) Kind() NodeKind {
 	return NodeExpr
 }
 
-func (n *ExprNode) Eval() string {
-	builder := strings.Builder{}
-
-	for _, expr := range n.Expressions {
-		builder.WriteString(expr.Eval())
-	}
-
-	return builder.String()
-}
-
-func (n *ExprNode) Repr() string {
-	builder := strings.Builder{}
-
-	for _, expr := range n.Expressions {
-		builder.WriteString(expr.Repr())
-	}
-
-	return builder.String()
-}
-
 func NewExprNode() *ExprNode {
-	return &ExprNode{make([]Expression, 0)}
+	return &ExprNode{}
 }
 
 //

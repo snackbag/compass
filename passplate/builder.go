@@ -18,7 +18,7 @@ type stateMachine struct {
 
 func (m *stateMachine) Pop() {
 	m.states = m.states[:len(m.states)-1]
-	
+
 	if len(m.states) == 0 {
 		m.states = append(m.states, StateIdle)
 	}
@@ -83,7 +83,7 @@ func Read(raw string) *RootNode {
 				s.Pop()
 
 				node := NewExprNode()
-				node.Expressions = createExpressions(strings.TrimSuffix(buffer, "/>"))
+				node.Expression = expr
 				cursor.Children = append(cursor.Children, node)
 
 				buffer = ""
@@ -99,7 +99,12 @@ func Read(raw string) *RootNode {
 
 				clause := NewRootNode()
 				clause.Parent = cursor
-				node := &IfNode{IfClause: clause, IfExpr: createBooleanExpr(strings.TrimSuffix(buffer, "/>")), ElseIfs: make(map[*BooleanExpr]*RootNode)}
+
+				expr, err := createBooleanExpr(strings.TrimSuffix(buffer, "/>"))
+				if err != nil {
+					return root, fmt.Errorf("failed to create if: %s", err)
+				}
+				node := &IfNode{IfClause: clause, IfExpr: expr, ElseIfs: make(map[*BooleanExpr]*RootNode)}
 				cursor.Children = append(cursor.Children, node)
 				cursor = clause
 
@@ -117,7 +122,12 @@ func Read(raw string) *RootNode {
 				clause := NewRootNode()
 				clause.Parent = cursor.Parent
 				node := cursor.Parent.LastChild().(*IfNode)
-				node.ElseIfs[createBooleanExpr(strings.TrimSuffix(buffer, "/>"))] = clause
+
+				expr, err := createBooleanExpr(strings.TrimSuffix(buffer, "/>"))
+				if err != nil {
+					return root, fmt.Errorf("failed to create elif: %s", err)
+				}
+				node.ElseIfs[expr] = clause
 				cursor = clause
 
 				buffer = ""
@@ -135,14 +145,15 @@ func Read(raw string) *RootNode {
 	}
 
 	cursor.Children = append(cursor.Children, NewTextNode(buffer))
-	return root
+	return root, nil
 }
 
-func createExpressions(buffer string) []Expression {
-	rv := make([]Expression, 0)
-	rv = append(rv, &VariableExpr{Name: buffer})
+func createExpression(buffer string) (Expression, error) {
+	return &VariableExpr{Name: buffer}, nil
+}
 
-	return rv
+func createBooleanExpr(buffer string) (*BooleanExpr, error) {
+	return &BooleanExpr{Right: &TextExpression{Value: "test"}, Left: &VariableExpr{Name: "admin"}}, nil
 }
 
 func appendBuffer(children []Node, buffer string, suffix string) []Node {
