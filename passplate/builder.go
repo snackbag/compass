@@ -9,9 +9,30 @@ const (
 	StateExpr
 )
 
+type stateMachine struct {
+	states []BuildState
+}
+
+func (m *stateMachine) Pop() {
+	m.states = m.states[:len(m.states)-1]
+	
+	if len(m.states) == 0 {
+		m.states = append(m.states, StateIdle)
+	}
+}
+
+func (m *stateMachine) Push(state BuildState) {
+	m.states = append(m.states, state)
+}
+
+func (m *stateMachine) State() BuildState {
+	return m.states[len(m.states)-1]
+}
+
 func Read(raw string) *RootNode {
 	buffer := ""
-	state := StateIdle
+	s := &stateMachine{make([]BuildState, 0)}
+	s.states = append(s.states, StateIdle)
 
 	root := NewRootNode()
 	cursor := root
@@ -21,10 +42,10 @@ func Read(raw string) *RootNode {
 		char := string(r)
 		buffer += char
 
-		switch state {
+		switch s.State() {
 		case StateIdle:
 			if strings.HasSuffix(buffer, "<$") {
-				state = StateExpr
+				s.Push(StateExpr)
 
 				cursor.Children = append(cursor.Children, NewTextNode(strings.TrimSuffix(buffer, "<$")))
 				buffer = ""
@@ -37,7 +58,7 @@ func Read(raw string) *RootNode {
 			}
 
 			if !inString && strings.HasSuffix(buffer, "/>") {
-				state = StateIdle
+				s.Pop()
 
 				node := NewExprNode()
 				node.Expressions = createExpressions(strings.TrimSuffix(buffer, "/>"))
