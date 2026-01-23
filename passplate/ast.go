@@ -24,6 +24,9 @@ func Represent(_n Node, indent int) string {
 
 	case *ExprNode:
 		return fmt.Sprintf("<Expression: %s/>", n.Repr())
+
+	case *IfNode:
+		return n.Repr(indent)
 	}
 
 	return ""

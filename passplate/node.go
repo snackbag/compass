@@ -1,6 +1,9 @@
 package passplate
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type NodeKind int
 
@@ -100,4 +103,29 @@ type IfNode struct {
 
 func (n *IfNode) Kind() NodeKind {
 	return NodeIf
+}
+
+func (n *IfNode) Repr(index int) string {
+	builder := strings.Builder{}
+
+	builder.WriteString(fmt.Sprintf("<If %s>\n", n.IfExpr.Repr()))
+	builder.WriteString(Represent(n.IfClause, index+1))
+
+	for e, r := range n.ElseIfs {
+		builder.WriteString(fmt.Sprintf("<ElseIf %s>\n", e.Repr()))
+		builder.WriteString(Represent(r, index+1))
+	}
+
+	if n.ElseClause != nil {
+		builder.WriteString(fmt.Sprintf("<Else>\n"))
+		builder.WriteString(Represent(n.ElseClause, index+1))
+	}
+
+	builder.WriteString("</If>")
+
+	return builder.String()
+}
+
+func (n *IfNode) Eval() string {
+	return ""
 }
