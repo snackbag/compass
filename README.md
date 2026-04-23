@@ -5,7 +5,6 @@ A Go http wrapper for quick development.
 ### Features
 
 - Kinda extensible
-- Passplate templating engine
 - Session management
 - Resource management
 - Questionable caching

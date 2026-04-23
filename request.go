@@ -3,7 +3,6 @@ package compass
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -31,6 +30,28 @@ func NewRequestFromHttp(r *http.Request) Request {
 	}
 }
 
+// writeResponse writes the headers, content type, status code, and body
+// of a Response to the client.
+//
+// Headers prefixed with "--COMPASS" are skipped. This is the shared
+// path for all standard responses.
+func (s *Server) writeResponse(w http.ResponseWriter, r Request, resp Response) error {
+	for key, value := range resp.Headers {
+		if strings.HasPrefix(key, "--COMPASS") {
+			continue
+		}
+		w.Header().Set(key, value)
+	}
+
+	if resp.ContentType != nil {
+		w.Header().Set("Content-Type", *resp.ContentType)
+	} else {
+		w.Header().Set("Content-Type", r.Http.Header.Get("Content-Type"))
+	}
+
+	return s.write(w, r.Http, resp.Body, resp.StatusCode)
+}
+
 // handleRequest processes an incoming Request and writes the response.
 //
 // If no route is matched, it delegates to handleNotFound. Otherwise,
@@ -55,49 +76,21 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 		return errors.New(string(resp.Body))
 	}
 
-	for key, value := range resp.Headers {
-		if strings.HasPrefix(key, "--COMPASS") {
-			continue
-		}
-
-		w.Header().Set(key, value)
-	}
-
 	if resp.ContentType != nil {
 		switch *resp.ContentType {
 		case "--COMPASS-redirect":
-			{
-				http.Redirect(w, r.Http, string(resp.Body), resp.StatusCode)
-				s.Logger.Request(r.Http, resp.StatusCode)
-				return nil
-			}
-		case "--COMPASS-serve":
-			{
-				rs := bytes.NewReader(resp.Body)
-				http.ServeContent(w, r.Http, resp.Headers["-Compass-File-Name"], time.Now(), rs)
-				s.Logger.Request(r.Http, resp.StatusCode)
-				return nil
-			}
-		}
-
-		if *resp.ContentType == "--COMPASS-redirect" {
 			http.Redirect(w, r.Http, string(resp.Body), resp.StatusCode)
+			s.Logger.Request(r.Http, resp.StatusCode)
+			return nil
+		case "--COMPASS-serve":
+			rs := bytes.NewReader(resp.Body)
+			http.ServeContent(w, r.Http, resp.Headers["-Compass-File-Name"], time.Now(), rs)
+			s.Logger.Request(r.Http, resp.StatusCode)
 			return nil
 		}
-
-		w.Header().Set("Content-Type", *resp.ContentType)
-	} else {
-		w.Header().Set("Content-Type", r.Http.Header.Get("Content-Type"))
-	}
-	w.WriteHeader(resp.StatusCode)
-
-	_, err := w.Write(resp.Body)
-	if err != nil {
-		return err
 	}
 
-	s.Logger.Request(r.Http, resp.StatusCode)
-	return nil
+	return s.writeResponse(w, r, resp)
 }
 
 // TODO add customizability
@@ -107,7 +100,8 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 // requested route was not found. This implementation is currently
 // not customizable.
 func (s *Server) handleNotFound(w http.ResponseWriter, r Request) error {
-	return s.write(w, r.Http, []byte(fmt.Sprintf("<html><h1>Not Found</h1><p>The requested route %s was not found on this server.</p></html>", r.URL.Path)), http.StatusNotFound)
+	resp := s.NotFoundHandler(r)
+	return s.writeResponse(w, r, resp)
 }
 
 // GetRouteParam returns the value of a named route parameter.
