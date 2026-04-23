@@ -17,9 +17,10 @@ type ServerConfiguration struct {
 }
 
 type Server struct {
-	Config       ServerConfiguration
-	Logger       Logger
-	AlertHandler func(err error)
+	Config          ServerConfiguration
+	Logger          Logger
+	AlertHandler    func(err error)
+	NotFoundHandler func(request Request) Response
 
 	routes map[int][]*Route // int = length
 }
@@ -71,6 +72,9 @@ func NewServer(config ServerConfiguration) *Server {
 		Config:       config,
 		Logger:       NewSimpleLogger(),
 		AlertHandler: func(err error) {},
+		NotFoundHandler: func(r Request) Response {
+			return TextWithCode(fmt.Sprintf("<html><h1>Not Found</h1><p>The requested route %s was not found on this server.</p></html>", r.URL.Path), http.StatusNotFound)
+		},
 
 		routes: make(map[int][]*Route),
 	}
