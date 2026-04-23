@@ -1,4 +1,4 @@
-# Compass — Contributor Docs
+# Compass Contributor Docs
 
 This directory contains internal documentation for contributors to the Compass framework.
 It is not aimed at end users. It covers how the internals work, why certain decisions were
