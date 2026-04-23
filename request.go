@@ -18,6 +18,10 @@ type Request struct {
 	Http *http.Request
 }
 
+// NewRequestFromHttp constructs a Request from a standard http.Request.
+//
+// The HTTP method is normalized to lowercase. The Route field is not
+// populated and must be assigned later during routing.
 func NewRequestFromHttp(r *http.Request) Request {
 	return Request{
 		Method: strings.ToLower(r.Method),
@@ -27,6 +31,20 @@ func NewRequestFromHttp(r *http.Request) Request {
 	}
 }
 
+// handleRequest processes an incoming Request and writes the response.
+//
+// If no route is matched, it delegates to handleNotFound. Otherwise,
+// it executes the route handler and writes the resulting response,
+// including headers, status code, and body.
+//
+// Special internal ContentType values control behavior:
+//
+//	"--COMPASS-redirect": performs an HTTP redirect
+//	"--COMPASS-serve": serves content as a file
+//
+// Headers prefixed with "--COMPASS" are ignored. All successful
+// responses are logged. If the handler signals an internal error,
+// it is returned.
 func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 	if r.Route == nil {
 		return s.handleNotFound(w, r)
@@ -83,11 +101,23 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 }
 
 // TODO add customizability
+// handleNotFound writes a default 404 HTML response.
+//
+// The response contains a simple HTML page indicating that the
+// requested route was not found. This implementation is currently
+// not customizable.
 func (s *Server) handleNotFound(w http.ResponseWriter, r Request) error {
 	return s.write(w, r.Http, []byte(fmt.Sprintf("<html><h1>Not Found</h1><p>The requested route %s was not found on this server.</p></html>", r.URL.Path)), http.StatusNotFound)
 }
 
-// GetRouteParam gets the requested content of the requested id. If nothing was found, it will return an empty string.
+// GetRouteParam returns the value of a named route parameter.
+//
+// The parameter is resolved using the route's internal mapping and
+// extracted from the URL path. Any defined prefix or suffix on the
+// route part is removed before returning the value.
+//
+// If the parameter does not exist, the route is not set, or the index
+// is out of bounds, an empty string is returned.
 func (r *Request) GetRouteParam(id string) string {
 	if len(id) < 1 {
 		return ""

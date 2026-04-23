@@ -24,6 +24,10 @@ type Server struct {
 	routes map[int][]*Route // int = length
 }
 
+// NewStandardConfiguration returns a default ServerConfiguration.
+//
+// The returned configuration contains sensible defaults for local
+// development, including a default port and directory names.
 func NewStandardConfiguration() ServerConfiguration {
 	return ServerConfiguration{
 		Port:       3000,
@@ -33,7 +37,11 @@ func NewStandardConfiguration() ServerConfiguration {
 	}
 }
 
-// CheckValidity returns an empty string when valid, otherwise a list of human-readable reasons why the config is invalid
+// CheckValidity validates the configuration fields.
+//
+// It returns an empty string if the configuration is valid.
+// Otherwise, it returns a semicolon-separated string describing
+// all detected issues.
 func (c ServerConfiguration) CheckValidity() string {
 	rv := ""
 
@@ -54,6 +62,10 @@ func (c ServerConfiguration) CheckValidity() string {
 	return strings.TrimSuffix(rv, ";")
 }
 
+// NewServer creates a new Server instance using the given configuration.
+//
+// The server is initialized with a default logger, a no-op alert handler,
+// and an empty route registry. The configuration is not validated here.
 func NewServer(config ServerConfiguration) *Server {
 	return &Server{
 		Config:       config,
@@ -64,7 +76,15 @@ func NewServer(config ServerConfiguration) *Server {
 	}
 }
 
-// Run starts the server, returns an error when the server crashes during startup. All other errors are handled by the Server.AlertHandler
+// Run starts the HTTP server.
+//
+// It first validates the configuration and returns an error if invalid.
+// Incoming requests are routed based on their path. Requests matching
+// the configured StaticUrl are served from the asset directory, while
+// all other requests are handled by registered routes.
+//
+// Errors that occur during request handling are passed to writeError
+// and in continuation the AlertHandler. Only startup failures are returned.
 func (s *Server) Run() error {
 	configValidity := s.Config.CheckValidity()
 	if configValidity != "" {
@@ -94,6 +114,10 @@ func (s *Server) Run() error {
 	return http.ListenAndServe(fmt.Sprintf(":%d", s.Config.Port), nil)
 }
 
+// MustRun starts the server and exits the program if startup fails.
+//
+// This is a convenience wrapper around Run that calls log.Fatalf
+// when an error occurs.
 func (s *Server) MustRun() {
 	err := s.Run()
 	if err != nil {
@@ -101,6 +125,11 @@ func (s *Server) MustRun() {
 	}
 }
 
+// writeStatic serves a static file from the asset directory.
+//
+// The target path is resolved relative to "<assetDir>/static".
+// If the file does not exist, a 404 response is returned.
+// On success, the file is served using http.ServeContent.
 func (s *Server) writeStatic(w http.ResponseWriter, request Request, assetDir string, target string) error {
 	path := filepath.Join(assetDir, "static", target)
 
@@ -125,6 +154,9 @@ func (s *Server) writeStatic(w http.ResponseWriter, request Request, assetDir st
 	return nil
 }
 
+// write writes raw byte data to the response with a given status code.
+//
+// It also logs the request. If writing fails, an error is returned.
 func (s *Server) write(w http.ResponseWriter, r *http.Request, data []byte, status int) error {
 	s.Logger.Request(r, status)
 
@@ -137,6 +169,11 @@ func (s *Server) write(w http.ResponseWriter, r *http.Request, data []byte, stat
 	return nil
 }
 
+// writeError handles internal server errors.
+//
+// It logs the error, triggers the AlertHandler, and sends a generic
+// 500 response to the client. The actual error details are not exposed
+// in the response body.
 func (s *Server) writeError(w http.ResponseWriter, r *http.Request, err error) {
 	s.Logger.Request(r, http.StatusInternalServerError)
 	s.Logger.Error(fmt.Sprintf("Soft capture: %v", err))
@@ -146,21 +183,33 @@ func (s *Server) writeError(w http.ResponseWriter, r *http.Request, err error) {
 	w.Write([]byte("There was an internal server error. Try again later."))
 }
 
+// splitUrlPath splits a URL path into its individual non-empty segments.
+//
+// It separates the input string by "/" and filters out any empty parts,
+// which may occur due to leading, trailing, or repeated slashes.
+// If the resulting slice is empty, a single empty string is returned
+// to ensure the result always contains at least one element.
+//
+// Examples:
+//
+//	"/a/b/c"   -> ["a", "b", "c"]
+//	"///a//b/" -> ["a", "b"]
+//	"/"        -> [""]
 func splitUrlPath(path string) []string {
 	raw := strings.Split(path, "/")
 	split := make([]string, 0)
-	
+
 	for _, part := range raw {
 		if part == "" {
 			continue
 		}
-		
+
 		split = append(split, part)
 	}
-	
+
 	if len(split) < 1 {
 		split = append(split, "")
 	}
-	
+
 	return split
 }

@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+// Logger defines a minimal logging interface used by the server.
+//
+// It supports basic log levels (Info, Warn, Error) and a dedicated
+// method for logging HTTP requests.
 type Logger interface {
 	Info(message string)
 	Warn(message string)
@@ -14,10 +18,18 @@ type Logger interface {
 	Request(r *http.Request, code int)
 }
 
+// SimpleLogger is a basic console logger implementation.
+//
+// It prints colored log messages to stdout and formats them with
+// timestamps and fixed-width prefixes for alignment.
 type SimpleLogger struct {
 	PrefixMaxLength int
 }
 
+// log formats and prints a log message with a timestamp and prefix.
+//
+// The prefix is trimmed or padded to PrefixMaxLength to keep output
+// aligned. ANSI color codes are used for styling.
 func (s *SimpleLogger) log(color string, prefix string, message string) {
 	currentTime := time.Now().Format("[2006-01-02 15:04:05]")
 
@@ -29,18 +41,28 @@ func (s *SimpleLogger) log(color string, prefix string, message string) {
 	fmt.Printf("%s %s%s\033[0m %s\033[0m\n", currentTime, color, prefix, message)
 }
 
+// Info logs a message with the "INFO" level.
 func (s *SimpleLogger) Info(message string) {
 	s.log("\x1b[38;2;40;177;249m", "INFO", message)
 }
 
+// Warn logs a message with the "WARN" level.
 func (s *SimpleLogger) Warn(message string) {
 	s.log("\033[1;33m", "WARN", message)
 }
 
+// Error logs a message with the "ERROR" level.
 func (s *SimpleLogger) Error(message string) {
 	s.log("\033[1;31m", "ERROR", message)
 }
 
+// Request logs an HTTP request and its response status code.
+//
+// The status code is color-coded based on its range:
+//
+//	2xx = green, 3xx = yellow, 4xx/5xx = red.
+//
+// It also logs the remote address, method, path, and user agent.
 func (s *SimpleLogger) Request(r *http.Request, code int) {
 	var colorCode string
 	switch {
@@ -60,6 +82,9 @@ func (s *SimpleLogger) Request(r *http.Request, code int) {
 	)
 }
 
+// NewSimpleLogger creates a SimpleLogger with default settings.
+//
+// The default PrefixMaxLength is set to 5.
 func NewSimpleLogger() *SimpleLogger {
 	return &SimpleLogger{PrefixMaxLength: 5}
 }

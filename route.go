@@ -22,10 +22,21 @@ type Route struct {
 	repr string
 }
 
+// ToString returns the original string representation of the route
+// as it was defined when added to the server.
 func (r *Route) ToString() string {
 	return r.repr
 }
 
+// matchesRawParts checks whether the given split URL path matches
+// this route's structure.
+//
+// Each segment is validated against its corresponding routePart by
+// verifying prefix and suffix constraints. If the part defines a
+// parameter (id != ""), the middle section may vary in length;
+// otherwise, the segment must match exactly.
+//
+// Returns true if all parts match, false otherwise.
 func (r *Route) matchesRawParts(split []string) bool {
 	for i, str := range split {
 		part := r.parts[i]
@@ -52,6 +63,26 @@ func (r *Route) matchesRawParts(split []string) bool {
 	return true
 }
 
+// AddRoute registers a new route on the server.
+//
+// The path is split into segments (by "/") and converted into an
+// internal structure used for matching requests later. Segments can
+// contain dynamic parameters using angle brackets, for example:
+//
+//	"/users/<id>"
+//
+// Each segment of the path is analyzed:
+//   - Static segments (e.g. "users") must match exactly.
+//   - Dynamic segments (e.g. "<id>") capture a value from the URL.
+//   - Mixed segments (e.g. "file-<name>.txt") extract only the dynamic part,
+//     while enforcing the surrounding prefix ("file-") and suffix (".txt").
+//
+// Routes are grouped by the number of segments, so only routes with
+// the same structure length are compared during lookup.
+//
+// Parameter names are taken from inside "< >" and converted to lowercase.
+//
+// If the given path results in no usable segments, the route is ignored.
 func (s *Server) AddRoute(path string, handler func(request Request) Response) {
 	parts := createParts(path)
 	length := len(parts)
@@ -81,6 +112,18 @@ func (s *Server) AddRoute(path string, handler func(request Request) Response) {
 	s.routes[length] = append(s.routes[length], route)
 }
 
+// createParts breaks a route path into individual parts used for matching.
+//
+// Each segment of the path is analyzed:
+//   - Static segments (e.g. "users") must match exactly.
+//   - Dynamic segments (e.g. "<id>") capture a value from the URL.
+//   - Mixed segments (e.g. "file-<name>.txt") extract only the dynamic part,
+//     while enforcing the surrounding prefix ("file-") and suffix (".txt").
+//
+// Parameter names are taken from inside "< >" and converted to lowercase.
+//
+// If the path is empty, a single empty part is returned so the rest of
+// the system can still operate consistently.
 func createParts(path string) []routePart {
 	split := splitUrlPath(path)
 	parts := make([]routePart, 0)
@@ -114,6 +157,13 @@ func createParts(path string) []routePart {
 	return parts
 }
 
+// FindRoute attempts to match a given path to a registered route.
+//
+// The path is split into segments and only routes with the same
+// segment count are considered. Each candidate route is checked
+// against the path using its matching rules.
+//
+// Returns the first matching route, or nil if no match is found.
 func (s *Server) FindRoute(path string) *Route {
 	split := splitUrlPath(path)
 
