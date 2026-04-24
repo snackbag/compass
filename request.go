@@ -36,6 +36,8 @@ func NewRequestFromHttp(r *http.Request) Request {
 // Headers prefixed with "--COMPASS" are skipped. This is the shared
 // path for all standard responses.
 func (s *Server) writeResponse(w http.ResponseWriter, r Request, resp Response) error {
+	s.writeCookies(w, resp.cookies)
+
 	for key, value := range resp.Headers {
 		if strings.HasPrefix(key, "--COMPASS") {
 			continue
@@ -79,11 +81,13 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 	if resp.ContentType != nil {
 		switch *resp.ContentType {
 		case "--COMPASS-redirect":
+			s.writeCookies(w, resp.cookies)
 			http.Redirect(w, r.Http, string(resp.Body), resp.StatusCode)
 			s.Logger.Request(r.Http, resp.StatusCode)
 			return nil
 		case "--COMPASS-serve":
 			rs := bytes.NewReader(resp.Body)
+			s.writeCookies(w, resp.cookies)
 			http.ServeContent(w, r.Http, resp.Headers["-Compass-File-Name"], time.Now(), rs)
 			s.Logger.Request(r.Http, resp.StatusCode)
 			return nil
@@ -134,4 +138,30 @@ func (r *Request) GetRouteParam(id string) (string, bool) {
 	value = strings.TrimSuffix(value, part.suffix)
 
 	return value, true
+}
+
+// GetCookie returns the value of the named cookie from the incoming request.
+//
+// The second return value is false if no cookie with that name was sent.
+// Note that incoming cookies carry only name and value and no attributes
+// like Path, Expires or HttpOnly.
+func (r *Request) GetCookie(name string) (string, bool) {
+	c, err := r.Http.Cookie(name)
+	if err != nil {
+		return "", false
+	}
+	return c.Value, true
+}
+
+// GetCookies returns all cookies sent with the request as a name-value map.
+//
+// If the same cookie name appears more than once, the last value wins.
+// Note that incoming cookies carry only name and value and no attributes
+// like Path, Expires or HttpOnly.
+func (r *Request) GetCookies() map[string]string {
+	result := make(map[string]string)
+	for _, c := range r.Http.Cookies() {
+		result[c.Name] = c.Value
+	}
+	return result
 }

@@ -14,11 +14,40 @@ var asciiFallback = regexp.MustCompile(`[^A-Za-z0-9 ._-]+`)
 
 type Response struct {
 	internalError bool
+	cookies       []Cookie
 
 	ContentType *string
 	Body        []byte
 	StatusCode  int
 	Headers     map[string]string
+}
+
+// SetCookie attaches a cookie to the response.
+//
+// Multiple calls are allowed. Each cookie results in its own Set-Cookie
+// header. cookies are written before the response body.
+func (r *Response) SetCookie(c Cookie) {
+	r.cookies = append(r.cookies, c)
+}
+
+// RemoveCookie expires a cookie by name, which makes the browser delete it.
+//
+// It sets Max-Age to -1 and clears the value. Path defaults to "/" as with
+// all cookies, so it will correctly expire cookies set with the default path.
+func (r *Response) RemoveCookie(name string) {
+	r.SetCookie(Cookie{Name: name, Value: "", MaxAge: -1})
+}
+
+// writeCookies writes a list of cookies as Set-Cookie headers.
+//
+// Set-Cookie is the one HTTP header that repeats, so each
+// cookie gets its own header line rather than being joined with commas.
+//
+// This is called by writeResponse before the status code is written.
+func (s *Server) writeCookies(w http.ResponseWriter, cookies []Cookie) {
+	for _, c := range cookies {
+		w.Header().Add("Set-Cookie", c.toHeader())
+	}
 }
 
 // Raw creates a basic Response with full control over its contents.
@@ -28,6 +57,7 @@ type Response struct {
 func Raw(contentType *string, body []byte, code int) Response {
 	return Response{
 		internalError: false,
+		cookies:       make([]Cookie, 0),
 
 		ContentType: contentType,
 		Body:        body,
