@@ -97,7 +97,6 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 	return s.writeResponse(w, r, resp)
 }
 
-// TODO add customizability
 // handleNotFound writes a default 404 HTML response.
 //
 // The response contains a simple HTML page indicating that the
