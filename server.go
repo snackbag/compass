@@ -1,12 +1,15 @@
 package compass
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -219,6 +222,50 @@ func (s *Server) writeError(w http.ResponseWriter, r *http.Request, err error) {
 
 	w.WriteHeader(http.StatusInternalServerError)
 	w.Write([]byte("There was an internal server error. Try again later."))
+}
+
+// CreateSession creates a new session, writes it to disk, and registers
+// it in the server's session map.
+//
+// The session directory is created if it does not already exist.
+// The caller is responsible for attaching the session cookie to the
+// response using response.SetSession
+//
+//		session, err := server.CreateSession()
+//		if err != nil { ... }
+//
+//	 resp := compass.Redirect("/", false)
+//	 resp.SetSession(session)
+//	 return resp
+func (s *Server) CreateSession() (*Session, error) {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate session id: %w", err)
+	}
+
+	dir := filepath.Join(s.Config.CompassDir, "session")
+	if err = os.MkdirAll(dir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create session directory: %w", err)
+	}
+
+	session := &Session{
+		server:     s,
+		id:         id,
+		LastAccess: time.Now().UnixMilli(),
+		rwMutex:    sync.RWMutex{},
+		data:       make(map[string]json.RawMessage),
+	}
+
+	session.rwMutex.Lock()
+	err = session.dump()
+	session.rwMutex.Unlock()
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to write initial session file: %w", err)
+	}
+
+	s.sessions[session.ID()] = session
+	return session, nil
 }
 
 // splitUrlPath splits a URL path into its individual non-empty segments.

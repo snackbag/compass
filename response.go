@@ -38,6 +38,14 @@ func (r *Response) RemoveCookie(name string) {
 	r.SetCookie(Cookie{Name: name, Value: "", MaxAge: -1})
 }
 
+// SetSession attaches a special session tracking cookie to the response.
+//
+// This ensures that future calls can properly read the session. You must run
+// this method if you want to keep the session in future request.
+func (r *Response) SetSession(session *Session) {
+	r.SetCookie(session.cookie())
+}
+
 // writeCookies writes a list of cookies as Set-Cookie headers.
 //
 // Set-Cookie is the one HTTP header that repeats, so each

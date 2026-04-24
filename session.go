@@ -188,6 +188,16 @@ func (s *Session) BeginTx() *SessionTransaction {
 	}
 }
 
+func (s *Session) cookie() Cookie {
+	return Cookie{
+		Name:     "_compassId",
+		Value:    s.ID(),
+		HttpOnly: true,
+		SameSite: SameSiteLax,
+		Path:     "/",
+	}
+}
+
 // Commit applies all staged changes to the session and writes it to disk.
 //
 // The write lock is held for the duration of the apply and the disk write.

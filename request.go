@@ -159,3 +159,22 @@ func (r *Request) GetCookies() map[string]string {
 	}
 	return result
 }
+
+// GetSession returns the session by the value of the _compassId cookie from
+// the incoming request.
+//
+// The second return value is false if no valid session was found or
+// no cookie was set in the first place.
+func (r *Request) GetSession(server *Server) (*Session, bool) {
+	cookie, ok := r.GetCookie("_compassId")
+	if !ok {
+		return nil, false
+	}
+
+	session, ok := server.sessions[cookie]
+	if !ok {
+		return nil, false
+	}
+
+	return session, true
+}
