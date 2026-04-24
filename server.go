@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type ServerConfiguration struct {
@@ -14,6 +15,8 @@ type ServerConfiguration struct {
 	AssetDir   string `json:"asset_dir"`
 	StaticUrl  string `json:"static_url"`
 	CompassDir string `json:"compass_dir"`
+
+	SessionExpiryTime int `json:"session_expiry_time"`
 }
 
 type Server struct {
@@ -22,7 +25,8 @@ type Server struct {
 	AlertHandler    func(err error)
 	NotFoundHandler func(request Request) Response
 
-	routes map[int][]*Route // int = length
+	routes   map[int][]*Route // int = length
+	sessions map[string]*Session
 }
 
 // NewStandardConfiguration returns a default ServerConfiguration.
@@ -35,6 +39,8 @@ func NewStandardConfiguration() ServerConfiguration {
 		AssetDir:   "assets",
 		StaticUrl:  "/static",
 		CompassDir: ".compass",
+
+		SessionExpiryTime: 3 * 24 * 60 * 60 * 1000, // 72 hours
 	}
 }
 
@@ -60,6 +66,10 @@ func (c ServerConfiguration) CheckValidity() string {
 		rv += "compass directory value is empty;"
 	}
 
+	if c.SessionExpiryTime < 1 {
+		rv += "session expiry time must be above zero;"
+	}
+
 	return strings.TrimSuffix(rv, ";")
 }
 
@@ -76,7 +86,24 @@ func NewServer(config ServerConfiguration) *Server {
 			return TextWithCode(fmt.Sprintf("<html><h1>Not Found</h1><p>The requested route %s was not found on this server.</p></html>", r.URL.Path), http.StatusNotFound)
 		},
 
-		routes: make(map[int][]*Route),
+		routes:   make(map[int][]*Route),
+		sessions: make(map[string]*Session),
+	}
+}
+
+// doManageSessionLifetimes starts a ticker for 5 minutes that checks the
+// LastAccess of each loaded session. If the session is found to be expired,
+// it is destroyed.
+//
+// This method is called after config validation in Run.
+func (s *Server) doManageSessionLifetimes() {
+	for range time.Tick(5 * time.Minute) {
+		for _, session := range s.sessions {
+			if time.Now().UnixMilli()-session.LastAccess > int64(s.Config.SessionExpiryTime) {
+				session.Destroy()
+				continue
+			}
+		}
 	}
 }
 
@@ -95,6 +122,7 @@ func (s *Server) Run() error {
 		return fmt.Errorf("config invalid: %s", configValidity)
 	}
 
+	go s.doManageSessionLifetimes()
 	s.Logger.Info(fmt.Sprintf("Server is listening on :%d", s.Config.Port))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		request := NewRequestFromHttp(r)

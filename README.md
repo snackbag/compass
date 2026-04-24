@@ -8,7 +8,7 @@ A Go http wrapper for quick development.
 - Session management
 - Resource management
 - Questionable caching
-- No dependencies
+- One dependency
 
 Internally, there is also:
 - Documentation on how things work and are implemented `/contributor-docs`
