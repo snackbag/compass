@@ -111,20 +111,20 @@ func (s *Server) handleNotFound(w http.ResponseWriter, r Request) error {
 // route part is removed before returning the value.
 //
 // If the parameter does not exist, the route is not set, or the index
-// is out of bounds, an empty string is returned.
-func (r *Request) GetRouteParam(id string) string {
+// is out of bounds, an empty string and false are returned.
+func (r *Request) GetRouteParam(id string) (string, bool) {
 	if len(id) < 1 {
-		return ""
+		return "", false
 	}
 
 	index, ok := r.Route.partIdMap[id]
 	if !ok {
-		return ""
+		return "", false
 	}
 
 	split := splitUrlPath(r.URL.Path)
 	if index > len(split)-1 {
-		return ""
+		return "", false
 	}
 
 	part := r.Route.parts[index]
@@ -133,5 +133,5 @@ func (r *Request) GetRouteParam(id string) string {
 	value = strings.TrimPrefix(value, part.prefix)
 	value = strings.TrimSuffix(value, part.suffix)
 
-	return value
+	return value, true
 }
