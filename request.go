@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 )
@@ -48,7 +49,7 @@ func (s *Server) writeResponse(w http.ResponseWriter, r Request, resp Response) 
 	if resp.ContentType != nil {
 		w.Header().Set("Content-Type", *resp.ContentType)
 	} else {
-		w.Header().Set("Content-Type", r.Http.Header.Get("Content-Type"))
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	}
 
 	return s.write(w, r.Http, resp.Body, resp.StatusCode)
@@ -70,7 +71,11 @@ func (s *Server) writeResponse(w http.ResponseWriter, r Request, resp Response) 
 // it is returned.
 func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 	if r.Route == nil {
-		return s.handleNotFound(w, r)
+		return s.writeResponse(w, r, s.NotFoundHandler(r))
+	}
+
+	if !slices.Contains(r.Route.AllowedMethods, r.Method) {
+		return s.writeResponse(w, r, s.MethodNotAllowedHandler(r))
 	}
 
 	resp := r.Route.handler(r)
@@ -94,16 +99,6 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 		}
 	}
 
-	return s.writeResponse(w, r, resp)
-}
-
-// handleNotFound writes a default 404 HTML response.
-//
-// The response contains a simple HTML page indicating that the
-// requested route was not found. This implementation is currently
-// not customizable.
-func (s *Server) handleNotFound(w http.ResponseWriter, r Request) error {
-	resp := s.NotFoundHandler(r)
 	return s.writeResponse(w, r, resp)
 }
 

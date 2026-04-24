@@ -20,10 +20,12 @@ type ServerConfiguration struct {
 }
 
 type Server struct {
-	Config          ServerConfiguration
-	Logger          Logger
-	AlertHandler    func(err error)
-	NotFoundHandler func(request Request) Response
+	Config       ServerConfiguration
+	Logger       Logger
+	AlertHandler func(err error)
+
+	NotFoundHandler         func(request Request) Response
+	MethodNotAllowedHandler func(request Request) Response
 
 	routes   map[int][]*Route // int = length
 	sessions map[string]*Session
@@ -82,8 +84,12 @@ func NewServer(config ServerConfiguration) *Server {
 		Config:       config,
 		Logger:       NewSimpleLogger(),
 		AlertHandler: func(err error) {},
+
 		NotFoundHandler: func(r Request) Response {
 			return TextWithCode(fmt.Sprintf("<html><h1>Not Found</h1><p>The requested route %s was not found on this server.</p></html>", r.URL.Path), http.StatusNotFound)
+		},
+		MethodNotAllowedHandler: func(r Request) Response {
+			return TextWithCode("<html><h1>Method not allowed</h1><p>The method is not allowed for the requested URL.</p></html>", http.StatusMethodNotAllowed)
 		},
 
 		routes:   make(map[int][]*Route),
@@ -167,7 +173,7 @@ func (s *Server) writeStatic(w http.ResponseWriter, request Request, assetDir st
 
 	_, err := os.Stat(path)
 	if err != nil {
-		return s.handleNotFound(w, request)
+		return s.writeResponse(w, request, s.NotFoundHandler(request))
 	}
 
 	file, err := os.Open(path)

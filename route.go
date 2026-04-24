@@ -19,6 +19,8 @@ type Route struct {
 	partIdMap map[string]int
 	handler   func(request Request) Response
 
+	AllowedMethods []string
+
 	repr string
 }
 
@@ -83,13 +85,13 @@ func (r *Route) matchesRawParts(split []string) bool {
 // Parameter names are taken from inside "< >" and converted to lowercase.
 //
 // If the given path results in no usable segments, the route is ignored.
-func (s *Server) AddRoute(path string, handler func(request Request) Response) {
+func (s *Server) AddRoute(path string, handler func(request Request) Response) *Route {
 	parts := createParts(path)
 	length := len(parts)
 
 	if length < 1 {
 		s.Logger.Error(fmt.Sprintf("Skipped adding route %q, because it seems to be empty", path))
-		return
+		return nil
 	}
 
 	if _, ok := s.routes[length]; !ok {
@@ -106,10 +108,12 @@ func (s *Server) AddRoute(path string, handler func(request Request) Response) {
 		partIdMap: partIdMap,
 		handler:   handler,
 
-		repr: path,
+		repr:           path,
+		AllowedMethods: []string{"get"},
 	}
 
 	s.routes[length] = append(s.routes[length], route)
+	return route
 }
 
 // createParts breaks a route path into individual parts used for matching.
