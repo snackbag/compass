@@ -163,8 +163,8 @@ func (r *Request) GetCookies() map[string]string {
 // GetSession returns the session by the value of the _compassId cookie from
 // the incoming request.
 //
-// The second return value is false if no valid session was found or
-// no cookie was set in the first place.
+// The second return value is false if no valid session was found,
+// no cookie was set, or the session was destroyed.
 func (r *Request) GetSession(server *Server) (*Session, bool) {
 	cookie, ok := r.GetCookie("_compassId")
 	if !ok {
@@ -173,6 +173,10 @@ func (r *Request) GetSession(server *Server) (*Session, bool) {
 
 	session, ok := server.sessions[cookie]
 	if !ok {
+		return nil, false
+	}
+
+	if session.destroyed {
 		return nil, false
 	}
 
