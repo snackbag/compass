@@ -19,7 +19,8 @@ type ServerConfiguration struct {
 	StaticUrl  string `json:"static_url"`
 	CompassDir string `json:"compass_dir"`
 
-	SessionExpiryTime int `json:"session_expiry_time"`
+	SessionExpiryTime   int `json:"session_expiry_time"`
+	SessionTickInterval int `json:"session_tick_interval"`
 }
 
 type Server struct {
@@ -45,7 +46,8 @@ func NewStandardConfiguration() ServerConfiguration {
 		StaticUrl:  "/static",
 		CompassDir: ".compass",
 
-		SessionExpiryTime: 3 * 24 * 60 * 60 * 1000, // 72 hours
+		SessionExpiryTime:   3 * 24 * 60 * 60 * 1000, // 72 hours
+		SessionTickInterval: 5 * 60 * 1000,           // 5 minutes
 	}
 }
 
@@ -73,6 +75,10 @@ func (c ServerConfiguration) CheckValidity() string {
 
 	if c.SessionExpiryTime < 1 {
 		rv += "session expiry time must be above zero;"
+	}
+
+	if c.SessionTickInterval < 1 {
+		rv += "session tick interval must be above zero;"
 	}
 
 	return strings.TrimSuffix(rv, ";")
