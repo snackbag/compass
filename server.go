@@ -112,12 +112,22 @@ func NewServer(config ServerConfiguration) *Server {
 //
 // This method is called after config validation in Run.
 func (s *Server) doManageSessionLifetimes() {
-	for range time.Tick(5 * time.Minute) {
+	for range time.Tick(time.Duration(s.Config.SessionTickInterval) * time.Millisecond) {
+		destroyedSessions := make([]*Session, 0)
+
 		for _, session := range s.sessions {
 			if time.Now().UnixMilli()-session.LastAccess > int64(s.Config.SessionExpiryTime) {
 				session.Destroy()
-				continue
 			}
+
+			if session.destroyed {
+				destroyedSessions = append(destroyedSessions, session)
+			}
+		}
+
+		for _, session := range destroyedSessions {
+			os.Remove(session.filePath())
+			delete(s.sessions, session.ID())
 		}
 	}
 }
