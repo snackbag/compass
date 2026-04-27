@@ -43,8 +43,21 @@ func (s *Session) ID() string {
 // The session file is removed from disk and the client cookie is expired
 // when the response is written. Calling Commit on any transaction belonging
 // to a destroyed session is ignored.
-func (s *Session) Destroy() {
+//
+// Returns an error if we failed to dump the session data
+func (s *Session) Destroy() error {
 	s.destroyed = true
+	return s.dump()
+}
+
+// MustDestroy executes Destroy, but any error that is thrown is forwarded to the AlertHandler.
+func (s *Session) MustDestroy() {
+	err := s.Destroy()
+	if err != nil {
+		err = fmt.Errorf("failed to destroy session: %w", err)
+		s.server.Logger.Error(err.Error())
+		s.server.AlertHandler(err)
+	}
 }
 
 // filePath returns the absolute path of this session's JSON file on disk.
@@ -85,8 +98,16 @@ func (s *Session) checkReload() {
 // changed since the last load, allowing external modifications, such as
 // those made by another server instance, to be picked up transparently.
 func (s *Session) reloadFromDisk() {
+	unlocked := false // cursed
+
 	s.rwMutex.Lock()
-	defer s.rwMutex.Unlock()
+	defer func() { // very cursed stuff here
+		if unlocked {
+			return
+		}
+		unlocked = true
+		s.rwMutex.Unlock()
+	}()
 
 	info, err := os.Stat(s.filePath())
 	if err != nil {
@@ -105,7 +126,11 @@ func (s *Session) reloadFromDisk() {
 
 	s.data = newData
 	s.lastModified = info.ModTime().UnixNano()
+
+	s.rwMutex.Unlock()
+	unlocked = true // the most curserest
 	s.LastAccess = SessionGetOrDefault(s, "--COMPASS-Last-Access", s.lastModified)
+	s.destroyed = SessionGetOrDefault(s, "--COMPASS-Destroyed", false)
 }
 
 // dump serialises the session's current data map to disk.
@@ -117,6 +142,8 @@ func (s *Session) dump() error {
 	wdat := s.data
 	b, _ := json.Marshal(time.Now().UnixMilli())
 	wdat["--COMPASS-Last-Access"] = b
+	b, _ = json.Marshal(s.destroyed)
+	wdat["--COMPASS-Destroyed"] = b
 
 	data, err := json.Marshal(wdat)
 	if err != nil {

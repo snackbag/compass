@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -117,7 +118,7 @@ func (s *Server) doManageSessionLifetimes() {
 
 		for _, session := range s.sessions {
 			if time.Now().UnixMilli()-session.LastAccess > int64(s.Config.SessionExpiryTime) {
-				session.Destroy()
+				session.MustDestroy()
 			}
 
 			if session.destroyed {
@@ -130,6 +131,46 @@ func (s *Server) doManageSessionLifetimes() {
 			delete(s.sessions, session.ID())
 		}
 	}
+}
+
+func (s *Server) loadSessionsFromDisk() error {
+	var files []string
+	root := filepath.Join(s.Config.CompassDir, "session")
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if d == nil {
+			return nil
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		if strings.HasSuffix(path, ".json") {
+			files = append(files, d.Name())
+			return nil
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to load sessions from disk: %w", err)
+	}
+
+	for _, file := range files {
+		name := strings.TrimSuffix(file, ".json")
+
+		session := &Session{
+			server:  s,
+			id:      uuid.MustParse(name),
+			rwMutex: sync.RWMutex{},
+			data:    make(map[string]json.RawMessage),
+		}
+		session.reloadFromDisk()
+		s.sessions[name] = session
+	}
+
+	return nil
 }
 
 // Run starts the HTTP server.
@@ -147,26 +188,33 @@ func (s *Server) Run() error {
 		return fmt.Errorf("config invalid: %s", configValidity)
 	}
 
+	err := s.loadSessionsFromDisk()
+	if err != nil {
+		s.Logger.Error(err.Error())
+		s.AlertHandler(err)
+	}
+
 	go s.doManageSessionLifetimes()
 	s.Logger.Info(fmt.Sprintf("Server is listening on :%d", s.Config.Port))
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		request := NewRequestFromHttp(r)
-		request.Route = s.FindRoute(r.URL.Path)
+	http.HandleFunc(
+		"/", func(w http.ResponseWriter, r *http.Request) {
+			request := NewRequestFromHttp(r)
+			request.Route = s.FindRoute(r.URL.Path)
 
-		if strings.HasPrefix(request.URL.Path, s.Config.StaticUrl) {
-			err := s.writeStatic(w, request, s.Config.AssetDir, strings.TrimPrefix(filepath.Clean(request.URL.Path), s.Config.StaticUrl))
+			if strings.HasPrefix(request.URL.Path, s.Config.StaticUrl) {
+				err := s.writeStatic(w, request, s.Config.AssetDir, strings.TrimPrefix(filepath.Clean(request.URL.Path), s.Config.StaticUrl))
+				if err != nil {
+					s.writeError(w, r, err)
+				}
+
+				return
+			}
+
+			err := s.handleRequest(w, request)
 			if err != nil {
 				s.writeError(w, r, err)
 			}
-
-			return
-		}
-
-		err := s.handleRequest(w, request)
-		if err != nil {
-			s.writeError(w, r, err)
-		}
-	})
+		})
 
 	return http.ListenAndServe(fmt.Sprintf(":%d", s.Config.Port), nil)
 }
