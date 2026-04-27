@@ -133,6 +133,8 @@ func (s *Server) doManageSessionLifetimes() {
 	}
 }
 
+// loadSessionsFromDisk walks all files in s.Config.CompassDir/session/ and attempts to
+// parse all JSON files as sessions.
 func (s *Server) loadSessionsFromDisk() error {
 	var files []string
 	root := filepath.Join(s.Config.CompassDir, "session")
