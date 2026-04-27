@@ -51,9 +51,15 @@ func (r *Response) SetSession(session *Session) {
 // Set-Cookie is the one HTTP header that repeats, so each
 // cookie gets its own header line rather than being joined with commas.
 //
+// Logs a warning if a cookie has SameSiteNone but (Secure == false).
+//
 // This is called by writeResponse before the status code is written.
 func (s *Server) writeCookies(w http.ResponseWriter, cookies []Cookie) {
 	for _, c := range cookies {
+		if c.SameSite == SameSiteNone && !c.Secure {
+			s.Logger.Warn(fmt.Sprintf("Writing cookie %q with SameSiteNone, but Secure is false. Client browser will reject this cookie!", c.Name))
+		}
+
 		w.Header().Add("Set-Cookie", c.toHeader())
 	}
 }
