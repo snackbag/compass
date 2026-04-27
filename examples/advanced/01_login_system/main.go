@@ -18,6 +18,9 @@ var users = make(map[string]User)
 func main() {
 	server = compass.NewServer(compass.NewStandardConfiguration())
 
+	//
+	// Page that changes its content based on whether you are logged in or not
+	//
 	server.AddRoute("/", func(request compass.Request) compass.Response {
 		session, ok := request.GetSession(server)
 		if !ok {
@@ -38,6 +41,21 @@ func main() {
 		return compass.Text(fmt.Sprintf("<html><p>You are logged in as %s; password %s. <a href=\"/logout\">Log out.</a></html>", user.Name, user.Password))
 	})
 
+	//
+	// Separate page that is only available to logged in people
+	//
+	server.AddRoute("/special", func(request compass.Request) compass.Response {
+		session, ok := request.GetSession(server)
+		if !ok {
+			return compass.Redirect("/", false)
+		}
+
+		return compass.Text(fmt.Sprintf("Hi %s!", compass.SessionGetOrDefault[string](session, "name", "fallback")))
+	})
+
+	//
+	// Page that shows a login/register dialog
+	//
 	routeLogin := server.AddRoute("/login", func(request compass.Request) compass.Response {
 		// if already logged in, do not allow new login
 		_, ok := request.GetSession(server)
@@ -71,6 +89,9 @@ func main() {
 	})
 	routeLogin.AllowedMethods = append(routeLogin.AllowedMethods, "post")
 
+	//
+	// Route that logs you out
+	//
 	server.AddRoute("/logout", func(request compass.Request) compass.Response {
 		session, ok := request.GetSession(server)
 		if !ok {
