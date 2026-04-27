@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 // Session represents an active user session backed by a JSON file on disk.
@@ -104,6 +105,7 @@ func (s *Session) reloadFromDisk() {
 
 	s.data = newData
 	s.lastModified = info.ModTime().UnixNano()
+	s.LastAccess = SessionGetOrDefault(s, "--COMPASS-Last-Access", s.lastModified)
 }
 
 // dump serialises the session's current data map to disk.
@@ -112,7 +114,11 @@ func (s *Session) reloadFromDisk() {
 // write, lastModified is updated to match the file's new mtime so that
 // the next checkReload does not trigger a redundant reload.
 func (s *Session) dump() error {
-	data, err := json.Marshal(s.data)
+	wdat := s.data
+	b, _ := json.Marshal(time.Now().UnixMilli())
+	wdat["--COMPASS-Last-Access"] = b
+
+	data, err := json.Marshal(wdat)
 	if err != nil {
 		return fmt.Errorf("failed to marshal during commit of session %s: %w", s.ID(), err)
 	}
@@ -158,7 +164,19 @@ func SessionGet[T any](s *Session, key string) (T, error) {
 		return zero, fmt.Errorf("failed to unmarshal key %q of session %s: %w", key, s.ID(), err)
 	}
 
+	s.LastAccess = time.Now().UnixMilli()
 	return result, nil
+}
+
+// SessionGetOrDefault is a wrapper around SessionGet, which attempts to get
+// the specified key, but upon any error, it silently returns the fallback value.
+func SessionGetOrDefault[T any](s *Session, key string, fallback T) T {
+	result, err := SessionGet[T](s, key)
+	if err != nil {
+		return fallback
+	}
+
+	return result
 }
 
 //
