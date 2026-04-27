@@ -34,7 +34,7 @@ func main() {
 
 		user, ok := users[id]
 		if !ok {
-			session.Destroy()
+			session.MustDestroy()
 			return compass.Text("Your session contains weird data. Try again")
 		}
 
@@ -98,7 +98,7 @@ func main() {
 			return compass.Text("You must be logged in to log out")
 		}
 
-		session.Destroy()
+		session.MustDestroy()
 		return compass.Redirect("/", false)
 	})
 
