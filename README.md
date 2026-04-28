@@ -34,7 +34,7 @@ that `Response` and does the actual writing to the client, so you never touch `h
 
 ```go
 func handleHello(r compass.Request) compass.Response {
-return compass.Text("hello")
+    return compass.Text("hello")
 }
 ```
 
@@ -46,7 +46,7 @@ return compass.Text("hello")
 server := compass.NewServer(compass.NewStandardConfiguration())
 
 server.AddRoute("/", func (r compass.Request) compass.Response {
-return compass.Text("hello")
+    return compass.Text("hello")
 })
 
 server.MustRun() // listens on :3000
