@@ -103,6 +103,18 @@ resp.SetCookie(compass.Cookie{Name: "theme", Value: "light"})
 return resp
 ```
 
+### Static files
+
+Anything in `assets/static/` is served under `/static/` automatically. Both paths are
+configurable.
+
+### Templating
+
+Compass does not come with its own templating engine. We recommend using something like 
+[fasttemplate](https://github.com/valyala/fasttemplate) and serving its output as text. It is 
+recommended, but not required, to put your templates in the `assets/templates/` directory. This 
+is up to you.
+
 ### Sessions
 
 Sessions are stored as JSON files in `.compass/session/`, so they survive restarts.
@@ -125,11 +137,6 @@ tx := session.BeginTx()
 tx.Set("name", "alice")
 tx.Commit()
 ```
-
-### Static files
-
-Anything in `assets/static/` is served under `/static/` automatically. Both paths are
-configurable.
 
 ### CORS
 
