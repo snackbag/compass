@@ -29,7 +29,7 @@ func main() {
 
 		id, err := compass.SessionGet[string](session, "name")
 		if err != nil {
-			return compass.InternalError("corrupted session, is missing name", 500)
+			return compass.InternalError("corrupted session, is missing name")
 		}
 
 		user, ok := users[id]
@@ -68,7 +68,7 @@ func main() {
 		} else if request.Method == "post" {
 			err := request.Http.ParseForm()
 			if err != nil {
-				return compass.InternalError(fmt.Sprintf("failed to parse form: %s", err), 500)
+				return compass.InternalError(fmt.Sprintf("failed to parse form: %s", err))
 			}
 
 			action := request.Http.FormValue("action")
@@ -85,7 +85,7 @@ func main() {
 			}
 		}
 
-		return compass.InternalError("somehow triggered illegal method", 500)
+		return compass.InternalError("somehow triggered illegal method")
 	})
 	routeLogin.AllowedMethods = append(routeLogin.AllowedMethods, "post")
 
@@ -149,7 +149,7 @@ func handleLogin(username string, password string) compass.Response {
 func makeSession(username string) (*compass.Session, *compass.Response) {
 	session, err := server.CreateSession()
 	if err != nil {
-		resp := compass.InternalError(err.Error(), 500)
+		resp := compass.InternalError(err.Error())
 		return session, &resp
 	}
 
