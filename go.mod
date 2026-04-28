@@ -1,4 +1,4 @@
-module github.com/snackbag/compass
+module github.com/snackbag/compass/v2
 
 go 1.22.7
 
