@@ -84,13 +84,13 @@ func Raw(contentType *string, body []byte, code int) Response {
 //
 // This does not directly write a response to the client. Instead, it marks
 // the response as an internal error so the server can handle it separately.
-func InternalError(message string, code int) Response {
+func InternalError(message string) Response {
 	return Response{
 		internalError: true,
 
 		ContentType: nil,
 		Body:        []byte(message),
-		StatusCode:  code,
+		StatusCode:  500,
 		Headers:     make(map[string]string),
 	}
 }
@@ -135,7 +135,7 @@ func JsonMarshal(obj any) Response {
 func JsonMarshalWithCode(obj any, code int) Response {
 	content, err := json.Marshal(obj)
 	if err != nil {
-		return InternalError(fmt.Sprintf("failed to marshal json object: %s", err), 500)
+		return InternalError(fmt.Sprintf("failed to marshal json object: %s", err))
 	}
 
 	return JsonStringWithCode(string(content), code)
@@ -182,7 +182,7 @@ func DownloadFile(filename string, path string) Response {
 func DownloadFileWithCode(filename string, path string, code int) Response {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return InternalError(fmt.Sprintf("failed to prepare file data for download: %s", err), 500)
+		return InternalError(fmt.Sprintf("failed to prepare file data for download: %s", err))
 	}
 
 	return DownloadBytesWithCode(filename, data, code)
@@ -248,7 +248,7 @@ func ServeFile(path string, name string) Response {
 func ServeFileWithCode(path string, name string, code int) Response {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return InternalError(fmt.Sprintf("failed to prepare file data for serve: %s", err), 500)
+		return InternalError(fmt.Sprintf("failed to prepare file data for serve: %s", err))
 	}
 
 	return ServeBytesWithCode(data, name, code)
