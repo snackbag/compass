@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/snackbag/compass"
+	"github.com/snackbag/compass/v2"
 )
 
 // the example is kinda big. cookies are actually really simple

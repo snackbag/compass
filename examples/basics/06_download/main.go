@@ -1,6 +1,6 @@
 package main
 
-import "github.com/snackbag/compass"
+import "github.com/snackbag/compass/v2"
 
 func main() {
 	server := compass.NewServer(compass.NewStandardConfiguration())

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/snackbag/compass"
+	"github.com/snackbag/compass/v2"
 )
 
 var server *compass.Server

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/snackbag/compass"
+	"github.com/snackbag/compass/v2"
 	"strings"
 )
 
