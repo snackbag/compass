@@ -38,9 +38,11 @@ func handleUpload(request compass.Request) compass.Response {
 	}
 	defer upload.Close()
 
-	_, err = io.Copy(upload, file)
-	if err != nil {
-		return compass.InternalError(err.Error())
+	limited := io.LimitReader(file, MaxUploadSize+1)
+	n, err := io.Copy(upload, limited)
+	if n > MaxUploadSize {
+		os.Remove(path)
+		return compass.Text("File too large!")
 	}
 
 	return compass.Redirect("/", false)
