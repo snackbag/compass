@@ -88,6 +88,7 @@ server.AddRoute("/items", handler).AllowedMethods = []string{"get", "post"}
 ```go
 compass.Text("hello")                    // 200, just text
 compass.TextWithCode("nope", 403)        // any status
+compass.HTML("<p>hiii</p>")              // 200, displayed as HTML
 compass.JsonMarshal(myStruct)            // marshals to JSON, 200
 compass.Redirect("/login", false)        // 303 redirect
 compass.DownloadFile("report.pdf", path) // triggers a file download
