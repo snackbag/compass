@@ -27,19 +27,21 @@ compass/
 ```
 net/http.ListenAndServe
     └── http.HandleFunc("/", ...)
-            ├── NewRequestFromHttp(r)          - wrap *http.Request
-            ├── FindRoute(r.URL.Path)          - attach matching *Route (or nil)
+            ├── NewRequestFromHttp(r)               - wrap *http.Request
+            ├── FindRoute(r.URL.Path)               - attach matching *Route (or nil)
             │
             ├── [static path?]
-            │       └── writeStatic(...)       - serve from assets/static/
+            │       └── writeStatic(...)            - serve from assets/static/
             │
             └── handleRequest(w, request)
-                    ├── [no route?]            -> NotFoundHandler -> writeResponse
-                    ├── [method not allowed?]  -> MethodNotAllowedHandler -> writeResponse
-                    ├── execute route func     -> MethodNotAllowedHandler -> writeResponse                    
-                    ├── [internalError?]       -> writeError
-                    ├── [redirect?]            -> http.Redirect
-                    ├── [serve?]               -> http.ServeContent
+                    ├── [no route?]                 -> NotFoundHandler -> writeResponse
+                    ├── [method not allowed?]       -> MethodNotAllowedHandler -> writeResponse
+                    ├── execute preprocessor        -> not nil? -> writeResponse   
+                    │       ├── [not nil?]          - write preprocessor response
+                    │       └── execute route func  -> MethodNotAllowedHandler -> writeResponse
+                    ├── [internalError?]            -> writeError
+                    ├── [redirect?]                 -> http.Redirect
+                    ├── [serve?]                    -> http.ServeContent
                     └── writeResponse(w, r, resp)
                             ├── writeCookies
                             ├── write headers

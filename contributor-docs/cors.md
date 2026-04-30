@@ -5,8 +5,8 @@
 ## Overview
 
 CORS support in Compass is implemented as a plain value type that attaches HTTP headers to
-a `Response`. There is no global middleware, no automatic preflight handling, and no hidden
-configuration. Callers apply a policy explicitly where they want it.
+a `Response`. There is no automatic preflight handling, and no hidden configuration. Callers apply a
+policy explicitly where they want it.
 
 ## CORSPolicy
 
@@ -108,10 +108,6 @@ func withCors(resp compass.Response) compass.Response {
 // In handlers:
 return withCors(compass.JsonMarshal(data))
 ```
-
-If a middleware system is added to Compass in the future, global CORS would be a natural first
-use case. The `CORSPolicy` type would not need to change, only the application point would
-move from individual responses to a middleware layer.
 
 ## Security notes for contributors
 
