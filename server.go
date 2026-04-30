@@ -96,10 +96,10 @@ func NewServer(config ServerConfiguration) *Server {
 		AlertHandler: func(err error) {},
 
 		NotFoundHandler: func(r Request) Response {
-			return TextWithCode(fmt.Sprintf("<html><h1>Not Found</h1><p>The requested route %s was not found on this server.</p></html>", r.URL.Path), http.StatusNotFound)
+			return HTMLWithCode(fmt.Sprintf("<html><h1>Not Found</h1><p>The requested route %s was not found on this server.</p></html>", r.URL.Path), http.StatusNotFound)
 		},
 		MethodNotAllowedHandler: func(r Request) Response {
-			return TextWithCode("<html><h1>Method not allowed</h1><p>The method is not allowed for the requested URL.</p></html>", http.StatusMethodNotAllowed)
+			return HTMLWithCode("<html><h1>Method not allowed</h1><p>The method is not allowed for the requested URL.</p></html>", http.StatusMethodNotAllowed)
 		},
 
 		routes:   make(map[int][]*Route),

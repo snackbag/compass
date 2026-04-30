@@ -38,7 +38,7 @@ func main() {
 			return compass.Text("Your session contains weird data. Try again")
 		}
 
-		return compass.Text(fmt.Sprintf("<html><p>You are logged in as %s; password %s. <a href=\"/logout\">Log out.</a></html>", user.Name, user.Password))
+		return compass.HTML(fmt.Sprintf("<html><p>You are logged in as %s; password %s. <a href=\"/logout\">Log out.</a></html>", user.Name, user.Password))
 	})
 
 	//
