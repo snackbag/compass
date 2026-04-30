@@ -65,7 +65,8 @@ func (s *Server) writeResponse(w http.ResponseWriter, r Request, resp Response) 
 
 1. Calls `writeCookies` to write `Set-Cookie` headers.
 2. Writes `resp.Headers`, skipping any key prefixed with `--COMPASS`.
-3. Sets `Content-Type` from `resp.ContentType` if non-nil; otherwise defaults to `"text/html; charset=utf-8"`.
+3. Sets `Content-Type` from `resp.ContentType` if non-nil; otherwise defaults to `"text/plain; 
+charset=utf-8"`.
 4. Calls `write` to write the status code and body.
 
 ## Internal headers

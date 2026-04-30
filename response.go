@@ -105,6 +105,17 @@ func TextWithCode(text string, code int) Response {
 	return Raw(nil, []byte(text), code)
 }
 
+// HTML creates a html text response with status code 200.
+func HTML(content string) Response {
+	return HTMLWithCode(content, 200)
+}
+
+// HTMLWithCode creates a html text response with a custom status code.
+func HTMLWithCode(content string, code int) Response {
+	typ := "text/html"
+	return Raw(&typ, []byte(content), code)
+}
+
 // JsonString creates a JSON response from a raw string with status code 200.
 //
 // The string is assumed to already be valid JSON.

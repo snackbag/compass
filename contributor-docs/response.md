@@ -22,7 +22,7 @@ Handlers build a `Response` and return it. They never write anything themselves.
 body as an operator-facing error message and sends a generic 500 to the client instead.
 
 `ContentType` is a pointer. nil means "not set", which causes `writeResponse` to fall back
-to `"text/html; charset=utf-8"`. An empty string and nil are different things here.
+to `"text/plain; charset=utf-8"`. An empty string and nil are different things here.
 
 `Headers` is always a non-nil map. You can add headers directly after calling any constructor:
 
@@ -48,6 +48,8 @@ delete it.
 Raw(contentType, body, code)
     └── TextWithCode(text, code)
             └── Text(text)
+    └── HTMLWithCode(content, code)
+            └── HTML(content)
     └── JsonStringWithCode(content, code)
             └── JsonString(content)
     └── DownloadBytesWithCode(filename, data, code)

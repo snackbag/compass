@@ -49,7 +49,7 @@ func (s *Server) writeResponse(w http.ResponseWriter, r Request, resp Response) 
 	if resp.ContentType != nil {
 		w.Header().Set("Content-Type", *resp.ContentType)
 	} else {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	}
 
 	return s.write(w, r.Http, resp.Body, resp.StatusCode)
