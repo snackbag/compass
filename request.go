@@ -78,7 +78,14 @@ func (s *Server) handleRequest(w http.ResponseWriter, r Request) error {
 		return s.writeResponse(w, r, s.MethodNotAllowedHandler(r))
 	}
 
-	resp := r.Route.handler(r)
+	pResp := s.Preprocessor(r)
+	var resp Response
+	if pResp != nil {
+		resp = *pResp
+	} else {
+		resp = r.Route.handler(r)
+	}
+
 	if resp.internalError {
 		return errors.New(string(resp.Body))
 	}

@@ -29,6 +29,11 @@ type Server struct {
 	Logger       Logger
 	AlertHandler func(err error)
 
+	// Preprocessor is called before a Route's handler is executed.
+	//
+	// If the returned Response is not nil, the handler is NOT executed,
+	// and the Response of the Preprocessor is written instead.
+	Preprocessor            func(request Request) *Response
 	NotFoundHandler         func(request Request) Response
 	MethodNotAllowedHandler func(request Request) Response
 
@@ -95,6 +100,9 @@ func NewServer(config ServerConfiguration) *Server {
 		Logger:       NewSimpleLogger(),
 		AlertHandler: func(err error) {},
 
+		Preprocessor: func(request Request) *Response {
+			return nil
+		},
 		NotFoundHandler: func(r Request) Response {
 			return HTMLWithCode(fmt.Sprintf("<html><h1>Not Found</h1><p>The requested route %s was not found on this server.</p></html>", r.URL.Path), http.StatusNotFound)
 		},
