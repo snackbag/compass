@@ -91,6 +91,38 @@ func (c ServerConfiguration) CheckValidity() string {
 	return strings.TrimSuffix(rv, ";")
 }
 
+// FillUnsets validates all fields and inserts the standard values if they
+// are unset in the given configuration.
+func FillUnsets(c ServerConfiguration) ServerConfiguration {
+	base := NewStandardConfiguration()
+
+	if c.Port == 0 {
+		c.Port = base.Port
+	}
+
+	if c.AssetDir == "" {
+		c.AssetDir = base.AssetDir
+	}
+
+	if c.StaticUrl == "" {
+		c.StaticUrl = base.StaticUrl
+	}
+
+	if c.CompassDir == "" {
+		c.CompassDir = base.CompassDir
+	}
+
+	if c.SessionExpiryTime == 0 {
+		c.SessionExpiryTime = base.SessionExpiryTime
+	}
+
+	if c.SessionTickInterval == 0 {
+		c.SessionTickInterval = base.SessionTickInterval
+	}
+
+	return c
+}
+
 // NewServer creates a new Server instance using the given configuration.
 // The configuration is not validated here.
 func NewServer(config ServerConfiguration) *Server {
