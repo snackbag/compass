@@ -1,44 +1,20 @@
 # Compass
 
-A Go http wrapper for quick development.
+A Go http wrapper featuring sessions and basic routes.
 
-### Features
+This project started when we began moving from Flask (which is Python) to Go, but there was no 
+suitable replacement.
 
-- Kinda extensible
-- Session management
-- Resource management
-- Questionable caching
-- One dependency
-
-Internally, there is also:
-
-- Documentation on how things work and are implemented [/contributor-docs](/contributor-docs)
-- ~~Testing suite~~ hmmmmmm
-
-### Why?
-
-There are probably better wrappers out there. Heck, even better Go web server implementations. And
-faster, too. This project was started to move from Python (Flask) to Go, but no suitable
-replacement was found. Therefore, it was decided to make our own, because reinventing the wheel is
-always such a good and well-thought-out decision™
-
-## Documentation
-
-There are docstrings everywhere, and if you want to contribute you should check out our [contributor
-documentation](/contributor-docs). Otherwise, here's a quick introduction.
-
-### The basic idea
+### The concept
 
 Every route handler is a function. It gets a `Request` and returns a `Response`. Compass takes
-that `Response` and does the actual writing to the client, so you never touch `http.ResponseWriter`.
+that `Response` does all the boring backend stuff for you.
 
 ```go
 func handleHello(r compass.Request) compass.Response {
     return compass.Text("hello")
 }
 ```
-
-`compass.Text("hello")` builds a response value, and Compass does the rest, just like Flask.
 
 ### Getting started
 
@@ -49,7 +25,7 @@ server.AddRoute("/", func (r compass.Request) compass.Response {
     return compass.Text("hello")
 })
 
-server.MustRun() // listens on :3000
+server.MustRun()
 ```
 
 `NewStandardConfiguration()` defaults:
@@ -63,8 +39,7 @@ server.MustRun() // listens on :3000
 | `SessionExpiryTime`   | `259200000`  | ms; 72 hours                              |
 | `SessionTickInterval` | `300000`     | ms; how often we check for session expiry |
 
-You can also dump or load the config struct in JSON, because the configuration has corresponding 
-field tags.
+You can also dump or load the config struct in JSON.
 
 ### Routes
 
@@ -77,7 +52,7 @@ server.AddRoute("/users/<id>", func (r compass.Request) compass.Response {
 })
 ```
 
-Routes accept `GET` only by default. Change that on the returned route:
+Compass manages route method safety for you.
 
 ```go
 server.AddRoute("/items", handler).AllowedMethods = []string{"get", "post"}
@@ -95,7 +70,7 @@ compass.DownloadFile("report.pdf", path) // triggers a file download
 compass.ServeFile(path, "photo.jpg")     // serves picture
 ```
 
-Headers and cookies go directly on the response value:
+Headers and cookies also work with the responses:
 
 ```go
 resp := compass.JsonMarshal(data)
@@ -104,21 +79,18 @@ resp.SetCookie(compass.Cookie{Name: "theme", Value: "light"})
 return resp
 ```
 
-### Static files
+### Static files and templating
 
 Anything in `assets/static/` is served under `/static/` automatically. Both paths are
 configurable.
 
-### Templating
-
 Compass does not come with its own templating engine. We recommend using something like 
-[fasttemplate](https://github.com/valyala/fasttemplate) and serving its output as text. It is 
-recommended, but not required, to put your templates in the `assets/templates/` directory. This 
-is up to you.
+[fasttemplate](https://github.com/valyala/fasttemplate) and serving its output as HTML. It is good practice to put your templates in 
+the `assets/templates/` directory, but at the end of the day, it's up to you.
 
 ### Sessions
 
-Sessions are stored as JSON files in `.compass/session/`, so they survive restarts.
+Sessions are stored as JSON files in `.compass/session/`
 
 ```go
 session, err := server.CreateSession()
@@ -145,8 +117,7 @@ tx.Commit()
 return compass.JsonMarshal(data).WithCORS(compass.AllowAll())
 ```
 
-`AllowAll()` is wide open, which is fine locally, but probably not for production. For production,
-set only what you need:
+And custom policies
 
 ```go
 policy := compass.CORSPolicy{Origin: "https://example.com", Methods: []string{"get", "post"}}
