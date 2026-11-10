@@ -45,27 +45,27 @@ func (s *SimpleLogger) log(color string, prefix string, message string) {
 }
 
 func (s *SimpleLogger) Info(a ...any) {
-	s.log("\x1b[38;2;40;177;249m", "INFO", fmt.Sprint(a))
+	s.log("\x1b[38;2;40;177;249m", "INFO", fmt.Sprint(a...))
 }
 
 func (s *SimpleLogger) Infof(format string, a ...any) {
-	s.log("\x1b[38;2;40;177;249m", "INFO", fmt.Sprintf(format, a))
+	s.log("\x1b[38;2;40;177;249m", "INFO", fmt.Sprintf(format, a...))
 }
 
 func (s *SimpleLogger) Warn(a ...any) {
-	s.log("\033[1;33m", "WARN", fmt.Sprint(a))
+	s.log("\033[1;33m", "WARN", fmt.Sprint(a...))
 }
 
 func (s *SimpleLogger) Warnf(format string, a ...any) {
-	s.log("\033[1;33m", "WARN", fmt.Sprintf(format, a))
+	s.log("\033[1;33m", "WARN", fmt.Sprintf(format, a...))
 }
 
 func (s *SimpleLogger) Error(a ...any) {
-	s.log("\033[1;31m", "ERROR", fmt.Sprint(a))
+	s.log("\033[1;31m", "ERROR", fmt.Sprint(a...))
 }
 
 func (s *SimpleLogger) Errorf(format string, a ...any) {
-	s.log("\033[1;31m", "ERROR", fmt.Sprintf(format, a))
+	s.log("\033[1;31m", "ERROR", fmt.Sprintf(format, a...))
 }
 
 // Request logs an HTTP request and its response status code.
