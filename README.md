@@ -5,6 +5,11 @@ A Go http wrapper featuring sessions and basic routes.
 This project started when we began moving from Flask (which is Python) to Go, but there was no 
 suitable replacement.
 
+## AI disclaimer
+
+AI (Claude) was used for the old contributor documentation as well as most docstrings. Future 
+documentation will not be written with AI. Besides documentation, AI was never used.
+
 ### The concept
 
 Every route handler is a function. It gets a `Request` and returns a `Response`. Compass takes

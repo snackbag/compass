@@ -3,11 +3,12 @@ package compass
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Session represents an active user session backed by a JSON file on disk.
@@ -195,8 +196,7 @@ func SessionGet[T any](s *Session, key string) (T, error) {
 	return result, nil
 }
 
-// SessionGetOrDefault is a wrapper around SessionGet, which attempts to get
-// the specified key, but upon any error, it silently returns the fallback value.
+// SessionGetOrDefault is a wrapper around SessionGet
 func SessionGetOrDefault[T any](s *Session, key string, fallback T) T {
 	result, err := SessionGet[T](s, key)
 	if err != nil {

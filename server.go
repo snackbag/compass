@@ -3,7 +3,6 @@ package compass
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"io/fs"
 	"log"
 	"net/http"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ServerConfiguration struct {
@@ -91,9 +92,7 @@ func (c ServerConfiguration) CheckValidity() string {
 }
 
 // NewServer creates a new Server instance using the given configuration.
-//
-// The server is initialized with a default logger, a no-op alert handler,
-// and an empty route registry. The configuration is not validated here.
+// The configuration is not validated here.
 func NewServer(config ServerConfiguration) *Server {
 	return &Server{
 		Config:       config,
